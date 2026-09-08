@@ -1,0 +1,485 @@
+/* English Localizable Strings */
+
+// MARK: - Common
+"common.cancel" = "Cancel";
+
+// MARK: - Language
+"settings.language" = "Language";
+"settings.languageDesc" = "Set the app interface language. Reopen windows to take effect";
+"common.save" = "Save";
+"common.ok" = "OK";
+"common.done" = "Done";
+"common.delete" = "Delete";
+"common.add" = "Add";
+"common.close" = "Close";
+"common.reset" = "Reset";
+"common.apply" = "Apply";
+"common.test" = "Test";
+"common.error" = "Error";
+"common.success" = "Success";
+"common.none" = "None";
+"common.manage" = "Manage";
+"common.import" = "Import";
+"common.start" = "Start";
+"common.stop" = "Stop";
+"common.show" = "Show";
+"common.hide" = "Hide";
+"common.restore" = "Restore";
+"common.browse" = "Browse…";
+"common.goToSettings" = "Open Settings";
+
+// MARK: - Menu Bar (AppDelegate)
+"menu.floatingButtonActions" = "Floating Buttons";
+"menu.button" = "Button %d";
+"menu.rebindWindow" = "Rebind Window";
+"menu.bindWindow" = "Bind Window";
+"menu.deleteButton" = "Delete Floating Button";
+"menu.restoreButton" = "Restore Floating Button";
+"menu.show" = "Show";
+"menu.hide" = "Hide";
+"menu.addButton" = "Add";
+"menu.globalArrange" = "Arrange";
+"menu.userGuide" = "User Guide";
+"menu.canvasBoard" = "Canvas Board";
+"menu.colorPicker" = "Color Picker";
+"menu.translationHistory" = "Translation History";
+"menu.officialInit" = "Default";
+"menu.preferences" = "Preferences";
+"menu.quit" = "Quit";
+
+// MARK: - Floating Button
+"button.rebindWindow" = "Rebind Window";
+"button.bindWindow" = "Bind Window";
+"button.arrangeGroup" = "Arrange Group";
+"button.clearHotkey" = "Clear Hotkey";
+"button.customize" = "Customize";
+"button.hideButton" = "Hide Floating Button";
+"button.deleteButton" = "Delete Floating Button";
+"button.createGlow" = "Create Glow Floating Button";
+"button.bindHotkey" = "Bind Hotkey";
+"button.hotkeyFormat" = "Format example: Cmd+Shift+Y, Control+Alt+P";
+"button.useGlobalSettings" = "Use Global Settings";
+"button.resetToDefault" = "Reset to Default";
+"button.moveForward" = "Move Forward";
+"button.moveBackward" = "Move Backward";
+"button.menu" = "Floating Button Menu";
+"button.customize2" = "Customize";
+"button.newGroup" = "New";
+"button.noGroup" = "No Group";
+
+// MARK: - Glow Floating Button
+"glow.menu" = "Floating Button Menu";
+
+// MARK: - Settings Tabs
+"settings.general" = "General";
+"settings.reminders" = "Reminders";
+"settings.about" = "About";
+"settings.hidden" = "Hidden Settings";
+"settings.ai" = "AI";
+"settings.backup" = "Backup";
+
+// MARK: - Settings - General
+"settings.windowSettings" = "Window Settings";
+"settings.noteMaxHeight" = "Note Window Max Height";
+"settings.noteMaxHeightDesc" = "Set the maximum display height of the note window";
+
+"settings.appearance" = "Appearance";
+"settings.noteTheme" = "Note Theme";
+"settings.noteThemeDesc" = "Set the background style of the note list";
+"settings.alwaysShowNoteActionButtons" = "Always Show Note Action Buttons";
+"settings.alwaysShowNoteActionButtonsDesc" = "Keep the move group, copy, and delete buttons visible without hovering";
+
+"settings.transparency" = "Transparency";
+"settings.noteTransparency" = "Note Transparency";
+"settings.noteTransparencyDesc" = "Set the transparency of note content";
+"settings.toolbarTransparency" = "Toolbar Transparency";
+"settings.toolbarTransparencyDesc" = "Set the transparency of the note toolbar";
+"settings.groupTransparency" = "Group Transparency";
+"settings.groupTransparencyDesc" = "Set the transparency of the group area";
+"settings.breathingTransparency" = "Breathing Effect Transparency";
+"settings.breathingTransparencyDesc" = "Set the transparency of the floating button breathing effect";
+
+// MARK: - Settings - Default Browser
+"settings.defaultBrowser" = "Default Browser";
+"settings.systemDefaultBrowser" = "System Default Browser";
+"settings.isDefaultBrowser" = "AIX is currently the default browser";
+"settings.setDefaultBrowserDesc" = "Set the default browser for opening links";
+"settings.alreadyDefault" = "Already Default Browser";
+"settings.autoCloseAfterSelect" = "Auto-close After Selection";
+"settings.autoCloseAfterSelectDesc" = "Auto-close the selection window after choosing a browser";
+"settings.closeImmediately" = "Close Immediately";
+"settings.3sec" = "3 sec";
+"settings.5sec" = "5 sec";
+"settings.8sec" = "8 sec";
+"settings.browserList" = "Browser List";
+"settings.dragToReorder" = "Drag to reorder, uncheck to hide";
+"settings.noBrowsers" = "No other browsers detected";
+
+// MARK: - Settings - Clipboard
+"settings.clipboard" = "Clipboard Settings";
+"settings.historyLimit" = "History Limit";
+"settings.historyLimitDesc" = "Set the number of clipboard history records to keep";
+"settings.itemCount" = "%d items";
+"settings.copySound" = "Copy Sound";
+"settings.copySoundDesc" = "Enable clipboard copy sound";
+"settings.soundSelection" = "Sound Selection";
+"settings.soundSelectionDesc" = "Select the sound to play when copying";
+
+// MARK: - Settings - Hotkeys
+"settings.globalHotkeys" = "Global Hotkeys";
+"settings.showHideAIX" = "Show/Hide AIX";
+"settings.showHideAIXDesc" = "Set the hotkey to show or hide all floating button windows";
+"settings.showHideButton" = "Show/Hide Floating Button";
+"settings.showHideButtonDesc" = "Set the global hotkey to show/hide floating buttons that are not individually hidden";
+"settings.colorPickerHotkey" = "Color Picker";
+"settings.colorPickerHotkeyDesc" = "Set the global hotkey to launch the color picker";
+"settings.pressHotkey" = "Press the hotkey combination you want (e.g.: Cmd+Shift+A)";
+"settings.currentHotkey" = "Current Hotkey:";
+"settings.colorPickerHotkeyLabel" = "Color Picker Hotkey:";
+"settings.quickModifiers" = "Quick Modifier Keys (click to copy):";
+"settings.clickToCopy" = "Click to copy %@";
+"settings.hotkeyFormatHint" = "Format: Combine keys with + (Modifiers: Cmd, Control, Alt/Option, Shift)";
+"settings.accessibilityNote" = "Note: Some advanced features (e.g. auto-hide) require accessibility permission.";
+"settings.clickToAuth" = "Click to Authorize";
+"settings.clearBinding" = "Clear Binding";
+
+// MARK: - Settings - Database
+"settings.database" = "Database";
+"settings.databaseFile" = "Database File";
+"settings.databaseFileDesc" = "Current SQLite file path for saving notes";
+"settings.selectDbFolder" = "Select Database Folder…";
+"settings.importDbMerge" = "Import Database (Merge)…";
+"settings.importPreview" = "Import Preview";
+"settings.importPreviewMsg" = "Will import %d groups, %d notes from '%@' to current database.\n\nDuplicate notes will be skipped.";
+"settings.targetDbNotExist" = "Target Database Does Not Exist";
+"settings.targetDbNotExistMsg" = "Target path does not exist. Copy current database and switch to this location?";
+"settings.copyAndSwitch" = "Copy and Switch";
+
+// MARK: - Settings - Groups
+"settings.groupDisplayMode" = "Group Display Mode";
+"settings.groupDisplayModeDesc" = "Set how group content is displayed";
+"settings.defaultGroup" = "Default Group";
+"settings.defaultNoteGroup" = "Default Note Group";
+"settings.defaultNoteGroupDesc" = "Default group shown in note list";
+"settings.defaultKnowledgeGroup" = "Default Knowledge Group";
+"settings.defaultKnowledgeGroupDesc" = "Default group shown in knowledge base";
+
+// MARK: - Settings - Reminders
+"settings.enableReminder" = "Enable Smart Reminder";
+"settings.enableReminderDesc" = "Smart break reminders based on actual activity time";
+"settings.instructions" = "Instructions";
+"settings.howSmartRemindersWork" = "How Smart Reminders Work:";
+"settings.smartSettings" = "Smart Settings";
+"settings.workDuration" = "Work Duration";
+"settings.workDurationDesc" = "Remind when accumulated active time reaches this value";
+"settings.minutes" = "%d minutes";
+"settings.restDuration" = "Rest Duration";
+"settings.restDurationDesc" = "Rest duration after clicking continue";
+"settings.idleThreshold" = "Idle Threshold";
+"settings.idleThresholdDesc" = "Pause timer when idle for longer than this";
+"settings.seconds" = "%d seconds";
+"settings.minutesAndSeconds" = "%d min %d sec";
+"settings.restRecognition" = "Rest Recognition";
+"settings.restRecognitionDesc" = "If idle exceeds this time, consider it as rested and reset timer";
+"settings.untilBreak" = "Until break:";
+"settings.reminderContent" = "Reminder Content";
+"settings.reminderMessage" = "Reminder Message";
+"settings.reminderMessageDesc" = "Set the text displayed during reminders";
+"settings.reminderSound" = "Reminder Sound";
+"settings.reminderSoundDesc" = "Select the sound played during reminders";
+"settings.restEndSound" = "Rest End Sound";
+"settings.restEndSoundDesc" = "Select the sound played when rest ends";
+"settings.testReminder" = "Test Reminder";
+"settings.testReminderDesc" = "Play a reminder immediately";
+"settings.reminderStep1" = "1. Start timing: Accumulates work time when keyboard or mouse activity is detected";
+"settings.reminderStep2" = "2. Pause timing: Pauses when idle exceeds threshold (watching videos/meetings don't count)";
+"settings.reminderStep3" = "3. Break reminder: Shows overlay when accumulated active time reaches work duration";
+"settings.reminderStep4" = "4. Rest recognition: Automatically recognized as rested when idle exceeds set time, resets timer";
+"settings.reminderStep5" = "5. App restart: Automatically resets all timers, starts fresh";
+
+// MARK: - Settings - About
+"settings.version" = "Version %@";
+"settings.supportAuthor" = "Support the Author";
+"settings.supportMessage" = "If you find this tool helpful, feel free to buy the author a coffee.\nYour support motivates continued updates!";
+"settings.buyCoffee" = "Buy Author a Coffee";
+"settings.collapseQRCode" = "Hide QR Code";
+"settings.scanAlipay" = "Scan with Alipay";
+"settings.showHiddenSettings" = "Show Hidden Settings";
+"settings.showHiddenSettingsDesc" = "Enable to show the 'Hidden Settings' tab in the top tab bar";
+
+// MARK: - Settings - Hidden Settings
+"settings.displayMode" = "Floating Button Display Mode";
+"settings.displayModeDesc" = "Choose whether the floating button shows icon or text";
+"settings.customIcon" = "Custom Icon";
+"settings.customIconDesc" = "Use SF Symbols names to customize floating button icons";
+
+// MARK: - Settings - Auto-hide
+"settings.appAutoHide" = "App Auto-Hide";
+"settings.enableAutoHide" = "Enable Auto-Hide";
+"settings.enableAutoHideDesc" = "Auto-hide inactive apps after timeout";
+"settings.timeout" = "Timeout";
+"settings.timeoutDesc" = "How long before inactive apps are auto-hidden";
+"settings.excludedApps" = "Excluded Apps";
+"settings.excludedAppsDesc" = "These apps will not be auto-hidden";
+"settings.selectExcludedApps" = "Select Excluded Apps";
+"settings.noManageableApps" = "No manageable apps detected";
+
+// MARK: - Settings - AI
+"settings.aiMode" = "AI Mode";
+"settings.aiBackend" = "Backend";
+"settings.aiBackendDesc" = "Select AI service backend";
+"settings.aiProvider" = "AI Provider";
+"settings.preset" = "Preset";
+"settings.presetDesc" = "Quickly switch AI provider";
+"settings.apiEndpoint" = "API Endpoint";
+"settings.apiEndpointDesc" = "OpenAI-compatible API endpoint";
+"settings.model" = "Model";
+"settings.modelDesc" = "AI model name";
+"settings.apiKey" = "API Key";
+"settings.apiKeyDesc" = "Your API key";
+"settings.systemPrompt" = "System Prompt";
+"settings.systemPromptDesc" = "Define AI's role and behavior";
+"settings.apiModeInstructions" = "API mode uses OpenAI-compatible interface. Requires endpoint and API key configuration.";
+"settings.opencodeConfig" = "opencode Configuration";
+"settings.opencodeModelDesc" = "opencode available free models";
+"settings.refreshModels" = "Refresh Model List";
+"settings.acpService" = "ACP Service";
+"settings.status" = "Status";
+"settings.statusDesc" = "ACP background service connection status";
+"settings.autoStart" = "Auto-Start";
+"settings.autoStartDesc" = "Auto-start ACP service when app launches";
+"settings.opencodeModeInstructions" = "opencode mode uses the local opencode CLI to call AI without API key. Please install opencode first and configure the model provider.";
+
+// MARK: - Settings - Data Backup
+"settings.dataBackup" = "Data Backup";
+"settings.autoBackup" = "Auto Backup";
+"settings.autoBackupDesc" = "Enable scheduled auto backup";
+"settings.backupFrequency" = "Backup Frequency";
+"settings.backupFrequencyDesc" = "Set the auto backup frequency";
+"settings.backupTime" = "Backup Time";
+"settings.backupTimeDesc" = "Set daily backup time";
+"settings.backupPath" = "Backup Path";
+"settings.backupPathDesc" = "Set where backup files are saved";
+"settings.maxBackups" = "Max Backups";
+"settings.maxBackupsDesc" = "Maximum number of backups to keep. Older backups will be deleted";
+"settings.backupCount" = "%d items";
+"settings.lastBackup" = "Last Backup";
+"settings.lastBackupDesc" = "Time of the last backup";
+"settings.backupNow" = "Backup Now";
+"settings.viewBackups" = "View Backups";
+"settings.backupList" = "Backup List";
+"settings.noBackups" = "No backups yet";
+"settings.notes" = "%d notes";
+"settings.groups" = "%d groups";
+"settings.backupCorrupted" = "Backup is corrupted";
+"settings.confirmRestore" = "Confirm Restore";
+"settings.confirmRestoreMsg" = "Are you sure you want to restore from backup '%@'?\n\nCurrent data will be backed up first, then replaced with the backup content.";
+
+// MARK: - Permissions
+"permission.title" = "Permissions Required";
+"permission.accessibility" = "Accessibility Permission";
+"permission.accessibilityDesc" = "Used to monitor keyboard and mouse activity for smart break reminders.";
+"permission.openSettings" = "Open System Settings";
+"permission.accessibilityPath" = "Path: System Settings → Privacy & Security → Accessibility";
+"permission.screenRecording" = "Screen Recording Permission";
+"permission.screenRecordingDesc" = "Used to detect system audio level (pauses timer during video/music).";
+"permission.screenRecordingPath" = "Path: System Settings → Privacy & Security → Screen Recording";
+"permission.missing" = "Missing Accessibility Permission";
+"permission.missingMsg" = "Smart reminder requires accessibility permission to monitor keyboard and mouse activity.\nPlease allow AIX accessibility permission in System Settings.";
+"permission.required" = "Accessibility Permission Required";
+"permission.requiredMsg" = "To control window visibility, AIX needs accessibility permission.\n\nPlease grant permission in System Settings.";
+"permission.openSystemSettings" = "Open System Settings";
+"permission.later" = "Later";
+
+// MARK: - Note List
+"notes.copiedToKnowledge" = "✅ Copied to Knowledge Base";
+"notes.doubleClickToTry" = "Double-click to view all";
+"notes.viewInLargeWindow" = "View in Large Window";
+"notes.copyContent" = "Copy Content";
+"notes.unpin" = "Unpin";
+"notes.moveToTop" = "Move to Top";
+"notes.deleteNote" = "Delete Note";
+"notes.editInLargeWindow" = "Edit/View in Large Window";
+"notes.fromKnowledgeBase" = "From Knowledge Base...";
+"notes.saved" = "Saved";
+"notes.manageGroups" = "Manage Groups";
+"notes.displayMode" = "Display Mode";
+"notes.defaultNoteGroup" = "Default Note Group";
+"notes.defaultKnowledgeGroup" = "Default Knowledge Group";
+"notes.knowledgeBase" = "Knowledge Base";
+"notes.trash" = "Trash";
+"notes.emptyTrash" = "Empty";
+"notes.confirmEmptyTrash" = "Confirm empty trash?";
+"notes.emptyTrashWarning" = "This will permanently delete all notes in the trash. This action cannot be undone.";
+"notes.trashEmpty" = "Trash is empty";
+"notes.restoreNote" = "Restore Note";
+"notes.permanentlyDelete" = "Permanently Delete";
+
+// MARK: - Clipboard
+"clipboard.history" = "Clipboard History";
+"clipboard.limit" = "Limit: %d";
+"clipboard.noRecords" = "No clipboard records";
+"clipboard.copyToClipboard" = "Copy to Clipboard";
+"clipboard.saveAsNote" = "Save as Note";
+"clipboard.cannotPreview" = "Content cannot be previewed";
+"clipboard.copiedWillPin" = "Copied, will be pinned";
+"clipboard.savedAsNote" = "Saved as note";
+
+// MARK: - Color List
+"colors.history" = "Color History";
+"colors.colorPicker" = "Color Picker";
+"colors.noRecords" = "No color records";
+"colors.copyHex" = "Copy Hex (#FFFFFF)";
+"colors.copyRGB" = "Copy RGB (255, 255, 255)";
+"colors.copySwiftUI" = "Copy SwiftUI Color";
+"colors.copyAppKit" = "Copy UIKit/AppKit NSColor";
+
+// MARK: - Favorites
+"favorites.releaseToAdd" = "Release to add to favorites";
+"favorites.dragHere" = "Drag files or folders here";
+"favorites.showInFinder" = "Show in Finder";
+
+// MARK: - Browser Picker
+"browser.noBrowsers" = "No browsers detected";
+
+// MARK: - Reminder Overlay
+"reminder.timeForBreak" = "Time for a break";
+"reminder.restLater" = "Rest Later";
+"reminder.resting" = "Resting";
+
+// MARK: - Large Window
+"largeWindow.typeQuestion" = "Type a question to start";
+"largeWindow.placeholder" = "Type a question...";
+
+// MARK: - Plugin Settings
+"plugin.installedPlugins" = "Installed Plugins";
+"plugin.noPlugins" = "No plugins installed";
+"plugin.details" = "Plugin Details";
+"plugin.name" = "Plugin Name";
+"plugin.nameDesc" = "Display name of the plugin";
+"plugin.id" = "Plugin ID";
+"plugin.idDesc" = "Unique identifier of the plugin";
+"plugin.description" = "Plugin Description";
+"plugin.descriptionDesc" = "Detailed description of plugin functionality";
+"plugin.enabledStatus" = "Enabled Status";
+"plugin.enabledStatusDesc" = "Whether to enable this plugin";
+"plugin.plugin" = "Plugin";
+
+// MARK: - Status Bar Timer
+"timer.closed" = "Disabled";
+"timer.closedTop" = "Timer";
+"timer.closedBottom" = "Off";
+"timer.unauthorized" = "Unauthorized";
+"timer.unauthorizedTop" = "No";
+"timer.unauthorizedBottom" = "Perm";
+"timer.rest" = "Rest %02d:%02d";
+"timer.restTop" = "Rest";
+"timer.workDone" = "Work Done";
+"timer.workDoneTop" = "Work";
+"timer.workDoneBottom" = "Done";
+
+// MARK: - Welcome Window
+"welcome.title" = "Welcome to AIX";
+"welcome.subtitle" = "Your Smart Floating Assistant";
+"welcome.quickActions" = "Quick Actions";
+"welcome.quickActionsDesc" = "Click the floating button to quickly access notes, clipboard, etc.";
+"welcome.windowControl" = "Window Control";
+"welcome.windowControlDesc" = "Show or hide any app window with one click";
+"welcome.smartNotes" = "Smart Notes";
+"welcome.smartNotesDesc" = "Record ideas anytime, supports multiple note modes";
+"welcome.clipboardHistory" = "Clipboard History";
+"welcome.clipboardHistoryDesc" = "View and manage your clipboard history";
+"welcome.getStarted" = "Get Started";
+
+// MARK: - Symbol Picker
+"symbolPicker.noMatch" = "No matching icons found";
+
+// MARK: - Window Manager
+"window.closed" = "Window Closed";
+"window.closedMsg" = "Target window no longer exists, please rebind.";
+
+// MARK: - Config Enums
+"config.group" = "Group";
+"config.horizontal" = "Horizontal";
+"config.vertical" = "Vertical";
+"config.circle" = "Circle";
+"config.roundedSquare" = "Rounded Square";
+"config.capsule" = "Capsule";
+"config.iconOnly" = "Icon Only";
+"config.textOnly" = "Text Only";
+"config.nameOnly" = "Name Only";
+"config.iconAndName" = "Icon and Name";
+"config.openNote" = "Open Note";
+"config.completed" = "Completed";
+"config.clipboard" = "Clipboard";
+"config.favorites" = "Favorites";
+"config.toggleWindow" = "Toggle Window";
+"config.breakReminder" = "Break Reminder";
+"config.colorList" = "Color List";
+"config.executeHotkey" = "Execute Hotkey";
+"config.aiList" = "AI List";
+"config.knowledgeList" = "Knowledge List";
+"config.plugin" = "Plugin";
+
+// MARK: - Backup Frequency
+"backup.manual" = "Manual";
+"backup.daily" = "Daily";
+"backup.weekly" = "Weekly";
+"backup.monthly" = "Monthly";
+
+// MARK: - Backup Errors
+"backup.pathNotSet" = "Backup path not set";
+"backup.invalidFile" = "Invalid backup file";
+"backup.failedTemplate" = "Backup failed: %@";
+
+// MARK: - Plugin Errors
+"pluginError.notFound" = "Plugin not found: %@";
+"pluginError.failed" = "Plugin execution failed: %@";
+"pluginError.disabled" = "Plugin disabled: %@";
+"pluginError.invalidConfig" = "Invalid plugin configuration";
+
+// MARK: - Plugin Names
+"plugin.openDocument" = "Open Document";
+"plugin.openDocumentDesc" = "Open document manager to view all documents";
+"plugin.searchDocuments" = "Search Documents";
+"plugin.searchDocumentsDesc" = "Search document content";
+"plugin.recentDocuments" = "Recent Documents";
+"plugin.recentDocumentsDesc" = "View recently opened documents";
+"plugin.newDocument" = "New Document";
+"plugin.newDocumentDesc" = "Create a new document";
+"plugin.screenshot" = "Screenshot";
+"plugin.screenshotDesc" = "Take a screenshot";
+"plugin.screenRecording" = "Screen Recording";
+"plugin.screenRecordingDesc" = "Record screen video";
+"plugin.quickNote" = "Quick Note";
+"plugin.quickNoteDesc" = "Quickly create a note";
+"plugin.showAllWindows" = "Show All Windows";
+"plugin.showAllWindowsDesc" = "Show all application windows";
+"plugin.hideAllWindows" = "Hide All Windows";
+"plugin.hideAllWindowsDesc" = "Hide all application windows";
+"plugin.toggleWindow" = "Toggle Window";
+"plugin.toggleWindowDesc" = "Toggle window visibility";
+
+// MARK: - Reminder Default Message
+"reminder.defaultMessage" = "Time for a break! Stand up and stretch your body.";
+
+// MARK: - Note Themes
+"config.solid" = "Solid";
+"config.gradient" = "Gradient";
+
+// MARK: - Color Schemes
+"config.bluePurple" = "Blue Purple";
+"config.pinkRose" = "Pink Rose";
+"config.oceanBlue" = "Ocean Blue";
+"config.sunsetOrange" = "Sunset Orange";
+"config.forestGreen" = "Forest Green";
+"config.pureWhite" = "Pure White";
+"config.pureBlack" = "Pure Black";
+
+// MARK: - AI Presets
+"config.custom" = "Custom";
+
+// MARK: - ACP Status
+"acp.disconnected" = "Disconnected";
+"acp.connecting" = "Connecting...";
+"acp.connected" = "Connected";

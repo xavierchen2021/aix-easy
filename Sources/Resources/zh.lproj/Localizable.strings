@@ -1,0 +1,485 @@
+/* Chinese (Default) Localizable Strings */
+
+// MARK: - 通用
+"common.cancel" = "取消";
+
+// MARK: - 语言设置
+"settings.language" = "语言";
+"settings.languageDesc" = "设置应用界面显示语言，切换后需要重新打开窗口生效";
+"common.save" = "保存";
+"common.ok" = "确定";
+"common.done" = "完成";
+"common.delete" = "删除";
+"common.add" = "添加";
+"common.close" = "关闭";
+"common.reset" = "重置";
+"common.apply" = "应用";
+"common.test" = "测试";
+"common.error" = "错误";
+"common.success" = "成功";
+"common.none" = "无";
+"common.manage" = "管理";
+"common.import" = "导入";
+"common.start" = "启动";
+"common.stop" = "停止";
+"common.show" = "显示";
+"common.hide" = "隐藏";
+"common.restore" = "恢复";
+"common.browse" = "选择…";
+"common.goToSettings" = "前往设置";
+
+// MARK: - 菜单栏 (AppDelegate)
+"menu.floatingButtonActions" = "悬浮球";
+"menu.button" = "按钮 %d";
+"menu.rebindWindow" = "重新绑定窗口";
+"menu.bindWindow" = "绑定窗口";
+"menu.deleteButton" = "删除悬浮球";
+"menu.restoreButton" = "恢复悬浮球";
+"menu.show" = "显示";
+"menu.hide" = "隐藏";
+"menu.addButton" = "添加";
+"menu.globalArrange" = "整理";
+"menu.userGuide" = "使用说明";
+"menu.canvasBoard" = "画板";
+"menu.colorPicker" = "取色器";
+"menu.translationHistory" = "翻译历史";
+"menu.officialInit" = "默认";
+"menu.preferences" = "偏好设置";
+"menu.quit" = "退出";
+
+// MARK: - 悬浮球 (FloatingButtonView)
+"button.rebindWindow" = "重新绑定窗口";
+"button.bindWindow" = "绑定窗口";
+"button.arrangeGroup" = "整理分组";
+"button.clearHotkey" = "清除快捷键";
+"button.customize" = "个性化设置";
+"button.hideButton" = "隐藏悬浮球";
+"button.deleteButton" = "删除悬浮球";
+"button.createGlow" = "创建光效悬浮球";
+"button.bindHotkey" = "绑定快捷键";
+"button.hotkeyFormat" = "格式示例：Cmd+Shift+Y、Control+Alt+P";
+"button.useGlobalSettings" = "使用全局设置";
+"button.resetToDefault" = "重置为默认";
+"button.moveForward" = "前移";
+"button.moveBackward" = "后移";
+"button.menu" = "悬浮球菜单";
+"button.customize2" = "个性化";
+"button.newGroup" = "新建";
+"button.noGroup" = "不分组";
+
+// MARK: - 光效悬浮球 (GlowFloatingButtonView)
+"glow.menu" = "悬浮球菜单";
+
+// MARK: - 设置 - 标签页
+"settings.general" = "通用";
+"settings.reminders" = "提醒";
+"settings.about" = "关于";
+"settings.hidden" = "隐藏设置";
+"settings.ai" = "AI";
+"settings.backup" = "备份";
+
+// MARK: - 设置 - 通用
+"settings.windowSettings" = "窗口设置";
+"settings.noteMaxHeight" = "笔记窗口最大高度";
+"settings.noteMaxHeightDesc" = "设置笔记窗口的最大显示高度";
+
+"settings.appearance" = "外观设置";
+"settings.noteTheme" = "笔记主题";
+"settings.noteThemeDesc" = "设置笔记列表的背景风格";
+"settings.alwaysShowNoteActionButtons" = "常驻显示笔记操作按钮";
+"settings.alwaysShowNoteActionButtonsDesc" = "开启后笔记右侧的移动分组、复制、删除按钮将常驻显示，无需鼠标悬停";
+
+"settings.transparency" = "透明度设置";
+"settings.noteTransparency" = "笔记透明度";
+"settings.noteTransparencyDesc" = "设置笔记内容的透明度";
+"settings.toolbarTransparency" = "工具栏透明度";
+"settings.toolbarTransparencyDesc" = "设置笔记顶部工具栏的透明度";
+"settings.groupTransparency" = "分组透明度";
+"settings.groupTransparencyDesc" = "设置分组区域的透明度";
+"settings.breathingTransparency" = "呼吸效果透明度";
+"settings.breathingTransparencyDesc" = "设置悬浮球呼吸效果的透明度";
+
+// MARK: - 设置 - 默认浏览器
+"settings.defaultBrowser" = "默认浏览器";
+"settings.systemDefaultBrowser" = "系统默认浏览器";
+"settings.isDefaultBrowser" = "AIX 当前已是系统默认浏览器";
+"settings.setDefaultBrowserDesc" = "设置打开链接时使用的默认浏览器";
+"settings.alreadyDefault" = "已是默认浏览器";
+"settings.autoCloseAfterSelect" = "选择后自动关闭";
+"settings.autoCloseAfterSelectDesc" = "选择浏览器后自动关闭选择窗口";
+"settings.closeImmediately" = "立即关闭";
+"settings.3sec" = "3 秒";
+"settings.5sec" = "5 秒";
+"settings.8sec" = "8 秒";
+"settings.browserList" = "浏览器列表";
+"settings.dragToReorder" = "拖拽调整顺序，取消勾选以隐藏";
+"settings.noBrowsers" = "未检测到其他浏览器";
+
+// MARK: - 设置 - 剪切板
+"settings.clipboard" = "剪切板设置";
+"settings.historyLimit" = "历史记录上限";
+"settings.historyLimitDesc" = "设置剪切板保存的历史记录数量";
+"settings.itemCount" = "%d条";
+"settings.copySound" = "复制提示音";
+"settings.copySoundDesc" = "启用剪切板复制提示音";
+"settings.soundSelection" = "提示音选择";
+"settings.soundSelectionDesc" = "选择复制时播放的声音";
+
+// MARK: - 设置 - 快捷键
+"settings.globalHotkeys" = "全局快捷键";
+"settings.showHideAIX" = "显示/隐藏 AIX";
+"settings.showHideAIXDesc" = "设置用于显示或隐藏所有悬浮球窗口的快捷键";
+"settings.showHideButton" = "显示/隐藏悬浮球";
+"settings.showHideButtonDesc" = "设置用于显示或隐藏未被单独隐藏的悬浮球的全局快捷键";
+"settings.colorPickerHotkey" = "取色器";
+"settings.colorPickerHotkeyDesc" = "设置用于启动取色器的全局快捷键";
+"settings.pressHotkey" = "请按下您想要的快捷键组合（例如：Cmd+Shift+A）";
+"settings.currentHotkey" = "当前快捷键：";
+"settings.colorPickerHotkeyLabel" = "取色器快捷键：";
+"settings.quickModifiers" = "快速输入修饰键（点击复制到剪切板）：";
+"settings.clickToCopy" = "点击复制 %@";
+"settings.hotkeyFormatHint" = "格式：组合键用+号分隔，修饰键：Cmd、Control、Alt/Option、Shift";
+"settings.accessibilityNote" = "提示：部分高级功能（如自动隐藏、操作感知）需要辅助功能权限。";
+"settings.clickToAuth" = "点击授权";
+"settings.clearBinding" = "清除绑定";
+
+// MARK: - 设置 - 数据库
+"settings.database" = "数据库";
+"settings.databaseFile" = "数据库文件";
+"settings.databaseFileDesc" = "当前用于保存笔记的 sqlite 文件路径";
+"settings.selectDbFolder" = "选择数据库文件夹…";
+"settings.importDbMerge" = "导入数据库（合并）…";
+"settings.importPreview" = "导入预览";
+"settings.importPreviewMsg" = "将从 '%@' 导入 %d 个分组，%d 个笔记到当前数据库。\n\n相同内容的笔记将被跳过。";
+"settings.targetDbNotExist" = "目标数据库不存在";
+"settings.targetDbNotExistMsg" = "目标路径不存在，是否将当前数据库复制并备份后切换到此位置？";
+"settings.copyAndSwitch" = "复制并切换";
+
+// MARK: - 设置 - 分组
+"settings.groupDisplayMode" = "分组显示模式";
+"settings.groupDisplayModeDesc" = "设置分组内容的显示方式";
+"settings.defaultGroup" = "默认分组";
+"settings.defaultNoteGroup" = "默认笔记分组";
+"settings.defaultNoteGroupDesc" = "笔记列表默认显示的分组";
+"settings.defaultKnowledgeGroup" = "默认知识分组";
+"settings.defaultKnowledgeGroupDesc" = "知识库默认显示的分组";
+
+// MARK: - 设置 - 提醒
+"settings.enableReminder" = "启用智能提醒";
+"settings.enableReminderDesc" = "根据实际活动时间智能提醒休息";
+"settings.instructions" = "使用说明";
+"settings.howSmartRemindersWork" = "智能提醒如何工作：";
+"settings.smartSettings" = "智能设置";
+"settings.workDuration" = "工作时长";
+"settings.workDurationDesc" = "累计活跃时间达到此值时提醒";
+"settings.minutes" = "%d 分钟";
+"settings.restDuration" = "休息时长";
+"settings.restDurationDesc" = "点击继续后的休息时长";
+"settings.idleThreshold" = "空闲阈值";
+"settings.idleThresholdDesc" = "超过此时间不操作时暂停计时";
+"settings.seconds" = "%d 秒";
+"settings.minutesAndSeconds" = "%d 分 %d 秒";
+"settings.restRecognition" = "休息认定";
+"settings.restRecognitionDesc" = "触发空闲后超过此时间则认定为已休息并重置计时";
+"settings.untilBreak" = "距离休息:";
+"settings.reminderContent" = "提醒内容";
+"settings.reminderMessage" = "提醒消息";
+"settings.reminderMessageDesc" = "设置提醒时显示的文字内容";
+"settings.reminderSound" = "提醒声音";
+"settings.reminderSoundDesc" = "选择提醒时播放的提示音";
+"settings.restEndSound" = "休息结束声音";
+"settings.restEndSoundDesc" = "选择休息结束时播放的提示音";
+"settings.testReminder" = "测试提醒";
+"settings.testReminderDesc" = "立即播放一次提醒";
+"settings.reminderStep1" = "1. 开始计时：检测到键盘或鼠标操作时开始累计工作时间";
+"settings.reminderStep2" = "2. 暂停计时：无操作超过空闲阈值时暂停（看视频/开会不计入）";
+"settings.reminderStep3" = "3. 提醒休息：累计活跃时间达到工作时长时弹出蒙版";
+"settings.reminderStep4" = "4. 休息认定：空闲超过设定时间后自动认定为已休息，重置计时";
+"settings.reminderStep5" = "5. 应用重启：自动重置所有计时器，重新开始计算";
+
+// MARK: - 设置 - 关于
+"settings.version" = "版本 %@";
+"settings.supportAuthor" = "支持作者";
+"settings.supportMessage" = "如果您觉得这个小工具对您有帮助，欢迎请作者喝杯咖啡。\n您的支持是我持续更新的动力！";
+"settings.buyCoffee" = "请作者喝杯咖啡";
+"settings.collapseQRCode" = "收起赞赏码";
+"settings.scanAlipay" = "支付宝扫码";
+"settings.showHiddenSettings" = "显示隐藏设置";
+"settings.showHiddenSettingsDesc" = "开启后在顶部标签栏显示「隐藏设置」页面";
+
+// MARK: - 设置 - 隐藏设置
+"settings.displayMode" = "悬浮球显示模式";
+"settings.displayModeDesc" = "选择悬浮球显示图标还是文字";
+"settings.customIcon" = "自定义图标";
+"settings.customIconDesc" = "使用 SF Symbols 名称自定义悬浮球图标";
+
+// MARK: - 设置 - 自动隐藏
+"settings.appAutoHide" = "应用自动隐藏";
+"settings.enableAutoHide" = "启用自动隐藏";
+"settings.enableAutoHideDesc" = "不活跃的应用超时后自动隐藏";
+"settings.timeout" = "超时时间";
+"settings.timeoutDesc" = "应用不活跃多久后自动隐藏";
+"settings.excludedApps" = "排除应用";
+"settings.excludedAppsDesc" = "这些应用不会被自动隐藏";
+"settings.selectExcludedApps" = "选择排除的应用";
+"settings.noManageableApps" = "未检测到可管理的应用";
+
+// MARK: - 设置 - AI
+"settings.aiMode" = "AI 模式";
+"settings.aiBackend" = "后端";
+"settings.aiBackendDesc" = "选择 AI 服务后端";
+"settings.aiProvider" = "AI 提供商";
+"settings.preset" = "预设";
+"settings.presetDesc" = "快速切换 AI 提供商";
+"settings.apiEndpoint" = "接口地址";
+"settings.apiEndpointDesc" = "OpenAI 兼容接口地址";
+"settings.model" = "模型";
+"settings.modelDesc" = "AI 模型名称";
+"settings.apiKey" = "API Key";
+"settings.apiKeyDesc" = "您的 API 密钥";
+"settings.systemPrompt" = "系统提示词";
+"settings.systemPromptDesc" = "定义 AI 的角色和行为";
+"settings.apiModeInstructions" = "API 模式基于 OpenAI 兼容接口，需要配置接口地址和 API Key。";
+"settings.opencodeConfig" = "opencode 配置";
+"settings.opencodeModelDesc" = "opencode 可用免费模型";
+"settings.refreshModels" = "刷新模型列表";
+"settings.acpService" = "ACP 服务";
+"settings.status" = "状态";
+"settings.statusDesc" = "ACP 后台服务连接状态";
+"settings.autoStart" = "自动启动";
+"settings.autoStartDesc" = "应用启动时自动启动 ACP 服务";
+"settings.opencodeModeInstructions" = "opencode 模式使用本地 opencode CLI 调用 AI，无需 API Key。请先安装 opencode 并配置好模型提供商。";
+
+// MARK: - 设置 - 数据备份
+"settings.dataBackup" = "数据备份";
+"settings.autoBackup" = "自动备份";
+"settings.autoBackupDesc" = "启用定时自动备份功能";
+"settings.backupFrequency" = "备份频率";
+"settings.backupFrequencyDesc" = "设置自动备份的频率";
+"settings.backupTime" = "备份时间";
+"settings.backupTimeDesc" = "设置每天的备份时间";
+"settings.backupPath" = "备份路径";
+"settings.backupPathDesc" = "设置备份文件保存的位置";
+"settings.maxBackups" = "最大备份数";
+"settings.maxBackupsDesc" = "保留的最大备份数量，超过会删除旧备份";
+"settings.backupCount" = "%d个";
+"settings.lastBackup" = "上次备份";
+"settings.lastBackupDesc" = "最后一次备份的时间";
+"settings.backupNow" = "立即备份";
+"settings.viewBackups" = "查看备份";
+"settings.backupList" = "备份列表";
+"settings.noBackups" = "暂无备份";
+"settings.notes" = "%d 笔记";
+"settings.groups" = "%d 分组";
+"settings.backupCorrupted" = "备份已损坏";
+"settings.confirmRestore" = "确认恢复";
+"settings.confirmRestoreMsg" = "确定要从备份 '%@' 恢复吗？\n\n当前数据会先被备份，然后替换为备份的内容。";
+
+// MARK: - 权限
+"permission.title" = "需要权限";
+"permission.accessibility" = "辅助功能权限";
+"permission.accessibilityDesc" = "用于监听键盘和鼠标活动，支撑智能休息提醒。";
+"permission.openSettings" = "前往系统设置";
+"permission.accessibilityPath" = "路径：系统设置 -> 隐私与安全性 -> 辅助功能";
+"permission.screenRecording" = "屏幕录制权限";
+"permission.screenRecordingDesc" = "用于检测系统音频响度（看视频/听音乐时暂停计时）。";
+"permission.screenRecordingPath" = "路径：系统设置 -> 隐私与安全性 -> 屏幕录制";
+"permission.missing" = "缺少辅助功能权限";
+"permission.missingMsg" = "智能提醒功能需要辅助功能权限来监听键盘和鼠标活动。\n请在系统设置中允许 AIX 的辅助功能权限。";
+"permission.required" = "需要辅助功能权限";
+"permission.requiredMsg" = "为了控制窗口的显示/隐藏，AIX 需要辅助功能权限。\n\n请在系统设置中授予权限。";
+"permission.openSystemSettings" = "打开系统设置";
+"permission.later" = "稍后";
+
+// MARK: - 笔记列表
+"notes.copiedToKnowledge" = "✅ 已复制到知识库";
+"notes.doubleClickToTry" = "双击查看全部";
+"notes.viewInLargeWindow" = "在大窗口查看";
+"notes.copyContent" = "复制内容";
+"notes.unpin" = "取消置顶";
+"notes.moveToTop" = "移到最顶端";
+"notes.deleteNote" = "删除笔记";
+"notes.editInLargeWindow" = "在大窗口编辑/查看";
+"notes.fromKnowledgeBase" = "从知识库...";
+"notes.saved" = "已保存";
+"notes.manageGroups" = "管理分组";
+"notes.displayMode" = "显示模式";
+"notes.defaultNoteGroup" = "默认笔记分组";
+"notes.defaultKnowledgeGroup" = "默认知识分组";
+"notes.knowledgeBase" = "知识库";
+"notes.trash" = "回收站";
+"notes.emptyTrash" = "清空";
+"notes.confirmEmptyTrash" = "确认清空回收站？";
+"notes.emptyTrashWarning" = "此操作将永久删除所有回收站中的笔记，不可恢复。";
+"notes.trashEmpty" = "回收站为空";
+"notes.restoreNote" = "恢复笔记";
+"notes.permanentlyDelete" = "彻底删除";
+
+// MARK: - 剪切板
+"clipboard.history" = "剪切板历史";
+"clipboard.limit" = "上限: %d";
+"clipboard.noRecords" = "暂无剪切板记录";
+"clipboard.copyToClipboard" = "复制到剪切板";
+"clipboard.saveAsNote" = "保存为笔记";
+"clipboard.cannotPreview" = "无法预览的内容";
+"clipboard.copiedWillPin" = "已复制，即将置顶";
+"clipboard.savedAsNote" = "已保存为笔记";
+
+// MARK: - 颜色列表
+"colors.history" = "颜色历史";
+"colors.colorPicker" = "取色器";
+"colors.noRecords" = "暂无颜色记录";
+"colors.copyHex" = "复制 Hex (#FFFFFF)";
+"colors.copyRGB" = "复制 RGB (255, 255, 255)";
+"colors.copySwiftUI" = "复制 SwiftUI Color";
+"colors.copyAppKit" = "复制 UIKit/AppKit NSColor";
+
+// MARK: - 收藏列表
+"favorites.releaseToAdd" = "松手添加到常用列表";
+"favorites.dragHere" = "拖拽文件或文件夹到这里";
+"favorites.showInFinder" = "在访达中显示";
+
+// MARK: - 浏览器选择
+"browser.noBrowsers" = "未检测到浏览器";
+
+// MARK: - 提醒蒙版
+"reminder.timeForBreak" = "该休息一下了";
+"reminder.restLater" = "稍后休息";
+"reminder.resting" = "休息中";
+
+// MARK: - 大窗口
+"largeWindow.typeQuestion" = "输入问题开始对话";
+"largeWindow.placeholder" = "输入问题...";
+
+// MARK: - 插件设置
+"plugin.installedPlugins" = "已安装插件";
+"plugin.noPlugins" = "暂无已安装的插件";
+"plugin.details" = "插件详情";
+"plugin.name" = "插件名称";
+"plugin.nameDesc" = "插件的显示名称";
+"plugin.id" = "插件ID";
+"plugin.idDesc" = "插件的唯一标识符";
+"plugin.description" = "插件描述";
+"plugin.descriptionDesc" = "插件功能的详细说明";
+"plugin.enabledStatus" = "启用状态";
+"plugin.enabledStatusDesc" = "是否启用此插件";
+"plugin.plugin" = "插件";
+
+// MARK: - 菜单栏计时器
+"timer.closed" = "已关闭";
+"timer.closedTop" = "提醒";
+"timer.closedBottom" = "关闭";
+"timer.unauthorized" = "未授权";
+"timer.unauthorizedTop" = "权限";
+"timer.unauthorizedBottom" = "未开";
+"timer.rest" = "休息 %02d:%02d";
+"timer.restTop" = "休息";
+"timer.workDone" = "工作完成";
+"timer.workDoneTop" = "工作";
+"timer.workDoneBottom" = "完成";
+
+// MARK: - 欢迎窗口
+"welcome.title" = "欢迎使用 AIX";
+"welcome.subtitle" = "您的智能悬浮助手";
+"welcome.quickActions" = "快速操作";
+"welcome.quickActionsDesc" = "点击悬浮球快速访问笔记、剪切板等功能";
+"welcome.windowControl" = "窗口控制";
+"welcome.windowControlDesc" = "一键显示或隐藏任意应用程序窗口";
+"welcome.smartNotes" = "智能笔记";
+"welcome.smartNotesDesc" = "随时记录想法，支持多种笔记模式";
+"welcome.clipboardHistory" = "剪切板历史";
+"welcome.clipboardHistoryDesc" = "查看和管理您的剪切板历史记录";
+"welcome.getStarted" = "开始使用";
+
+// MARK: - 图标选择器
+"symbolPicker.noMatch" = "未找到匹配图标";
+
+// MARK: - 窗口管理
+"window.closed" = "窗口已关闭";
+"window.closedMsg" = "目标窗口已不存在，请重新绑定。";
+
+// MARK: - 配置枚举值
+"config.group" = "分组";
+"config.horizontal" = "水平";
+"config.vertical" = "垂直";
+"config.circle" = "圆形";
+"config.roundedSquare" = "圆角正方形";
+"config.capsule" = "胶囊形";
+"config.iconOnly" = "仅图标";
+"config.textOnly" = "仅文字";
+"config.nameOnly" = "仅名称";
+"config.iconAndName" = "图标与名称";
+"config.openNote" = "打开笔记";
+"config.completed" = "已完成";
+"config.clipboard" = "剪切板";
+"config.favorites" = "常用文件";
+"config.toggleWindow" = "控制窗口";
+"config.breakReminder" = "提醒休息";
+"config.colorList" = "颜色列表";
+"config.executeHotkey" = "执行快捷键";
+"config.aiList" = "AI列表";
+"config.knowledgeList" = "知识列表";
+"config.plugin" = "插件";
+
+// MARK: - 备份频率
+"backup.manual" = "手动";
+"backup.daily" = "每天";
+"backup.weekly" = "每周";
+"backup.monthly" = "每月";
+
+// MARK: - 备份错误
+"backup.pathNotSet" = "未设置备份路径";
+"backup.invalidFile" = "无效的备份文件";
+"backup.failedTemplate" = "备份失败: %@";
+
+// MARK: - 插件错误
+"pluginError.notFound" = "插件未找到: %@";
+"pluginError.failed" = "插件执行失败: %@";
+"pluginError.disabled" = "插件已禁用: %@";
+"pluginError.invalidConfig" = "无效的插件配置";
+
+// MARK: - 插件名称
+"plugin.openDocument" = "打开文档";
+"plugin.openDocumentDesc" = "打开文档管理器查看所有文档";
+"plugin.searchDocuments" = "搜索文档";
+"plugin.searchDocumentsDesc" = "搜索文档内容";
+"plugin.recentDocuments" = "最近文档";
+"plugin.recentDocumentsDesc" = "查看最近打开的文档";
+"plugin.newDocument" = "新建文档";
+"plugin.newDocumentDesc" = "创建新文档";
+"plugin.screenshot" = "截图";
+"plugin.screenshotDesc" = "截取屏幕截图";
+"plugin.screenRecording" = "录屏";
+"plugin.screenRecordingDesc" = "录制屏幕视频";
+"plugin.quickNote" = "快速笔记";
+"plugin.quickNoteDesc" = "快速创建笔记";
+"plugin.showAllWindows" = "显示所有窗口";
+"plugin.showAllWindowsDesc" = "显示所有应用窗口";
+"plugin.hideAllWindows" = "隐藏所有窗口";
+"plugin.hideAllWindowsDesc" = "隐藏所有应用窗口";
+"plugin.toggleWindow" = "切换窗口";
+"plugin.toggleWindowDesc" = "切换窗口显示状态";
+
+// MARK: - 提醒默认消息
+"reminder.defaultMessage" = "该休息一下了！站起来活动一下身体吧。";
+
+// MARK: - 笔记主题
+"config.solid" = "纯色";
+"config.gradient" = "质感";
+
+// MARK: - 配色方案
+"config.bluePurple" = "蓝紫渐变";
+"config.pinkRose" = "粉玫瑰";
+"config.oceanBlue" = "海洋蓝";
+"config.sunsetOrange" = "日落橙";
+"config.forestGreen" = "森林绿";
+"config.pureWhite" = "简约白";
+"config.pureBlack" = "深邃黑";
+
+// MARK: - AI 预设
+"config.custom" = "自定义";
+
+// MARK: - ACP 状态
+"acp.disconnected" = "未连接";
+"acp.connecting" = "连接中...";
+"acp.connected" = "已连接";

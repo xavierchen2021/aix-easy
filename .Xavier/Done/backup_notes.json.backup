@@ -1,0 +1,362 @@
+[
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "DB02A33B-AF44-4776-9ABF-D2916991CBE2",
+    "isCompleted": false,
+    "createdAt": 789385425.1608729,
+    "content": "现在在列表之间切换时，高度没有自适应",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "6DB05F6E-14D8-4F33-AC04-2A736B224C35",
+    "isCompleted": false,
+    "createdAt": 789384485.1404691,
+    "content": "鼠标放到笔记的右上角的透明区域时，可以被拖动，排序",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "67F59857-E035-40B8-9B7B-41150CBD50E4",
+    "isCompleted": false,
+    "createdAt": 789382311.575552,
+    "content": "在状态栏右键菜单上添加悬浮球分组功能，该功能要求，自动将所有的悬浮球限制为等间距的竖排，可以调整上下顺序，除了调整悬浮球之间的上下顺序以外的移动时，悬浮球一起移动",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "4C947155-BD00-4FE0-A4A9-BC3CE854D12B",
+    "isCompleted": false,
+    "createdAt": 789379111.190839,
+    "content": "个性化设置里，悬浮按钮的形状下拉，只需要两个选项，另外胶囊应该是像胶囊一样，是横向的，而不是现在的方形",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "1D67C2F0-20A5-45DE-BA72-A08D842C8B7B",
+    "isCompleted": false,
+    "createdAt": 789377762.160162,
+    "content": "基于插件功能，开发常用文档功能",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "1166754C-EDC8-44FF-A8CE-8B277FFD66AA",
+    "id": "D7A2BC37-30D1-4F50-9843-EE83630691CC",
+    "isCompleted": false,
+    "createdAt": 789374108.6153522,
+    "content": "sudo xattr -r -d com.apple.quarantine /Applications/",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "2681ADEB-63C9-408E-823D-0FCCD94D2227",
+    "isCompleted": false,
+    "createdAt": 789367520.9903622,
+    "content": "控制窗口时，优先前置窗口，即 如果窗口是非最小化，但不是前置聚焦状态，也就是其他窗口在它前面，则点击悬浮按钮是将窗口前置，而不是现在的最小化",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "1166754C-EDC8-44FF-A8CE-8B277FFD66AA",
+    "id": "EAF9FA99-538C-4D43-900F-EB4E320E83F9",
+    "isCompleted": false,
+    "createdAt": 789363914.149075,
+    "content": "QQ群：812150945",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "27E3CFA2-A243-43F2-9A87-5C84F33210A8",
+    "isCompleted": false,
+    "createdAt": 789311935.7417068,
+    "content": "在关于里添加我开发的其他软件的信息",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "530EC80A-F332-49FC-B014-AE5227B0610C",
+    "isCompleted": false,
+    "createdAt": 789311715.1071548,
+    "content": "调整控制窗口的选择窗口功能的样式，使其放在某个窗口上时，除了显示窗口信息以外，在窗口的轮廓上添加一个高亮边框",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "D25AEABA-F993-4331-847C-6FC523065F64",
+    "isCompleted": false,
+    "createdAt": 789311546.3647299,
+    "content": "基于扩展系统开发Git管理功能，实时反应Git仓库的情况，初版完成工作数、分支、变更、并可以点击变更文件使用指定IDE打开Git仓库后，打开文件的diff模式或编辑模式",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "BD6518E8-CD0D-4D66-B29D-BDC9CAA67165",
+    "isCompleted": false,
+    "createdAt": 789311232.8683629,
+    "content": "基于扩展系统，开发AI功能，可以识别笔记内容，分配不同的标签，标签类型用户可以自定义，比如，需求这个分类，用户可以告诉AI它代表什么意思，比如内容是关于软件开发新功能的算需求，而BUG，则可以定义给AI笔记内容是关于软件问题需要修复的，并且要考虑到AI可以接收的提示词的最大字数，避免AI无法接受",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "34AD76CB-04C5-467D-86E5-30F797C42199",
+    "isCompleted": false,
+    "createdAt": 789311139.7778649,
+    "content": "现在的笔记是不是相邻的不能是相同的颜色，修改算法，新笔记的颜色，与下方的5个笔记都不能是相同的颜色",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "7566FD9E-12B3-471B-9F89-511B8B8ADE9A",
+    "isCompleted": false,
+    "createdAt": 789310819.1611099,
+    "content": "为了笔记列表内容超出窗口内容后，窗口边缘不显得锐利的截断，所以，窗口下方的边缘添加模糊效果，显得更加自然",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "203C05DF-6440-4275-B723-CCD069FEC500",
+    "isCompleted": false,
+    "createdAt": 789310633.463099,
+    "content": "基于扩展功能，开发密码计算功能，可以先了解下花密，即一个记忆码一个区别码，计算出实际密码，并且无法倒推记忆码，即知道多个密码和区别码，也无法推算出记忆码，并且可以设置最终密码的复杂度，包括位数、是否有字母、是否有数字，是否有特殊符号",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "56353015-5625-453E-8AE1-A4B21761F3C2",
+    "isCompleted": false,
+    "createdAt": 789310331.1649752,
+    "content": "现在悬浮按钮的最大大小设置为80，状态栏右键菜单无需悬浮按钮大小和悬浮按钮操作的设置项了",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "DAAA0A38-942C-434D-BD8A-CE0042B83A1F",
+    "isCompleted": false,
+    "createdAt": 789310128.94346,
+    "content": "笔记大编辑窗口的颜色要与它在列表中的颜色一致，位置始终为相对于悬浮按钮的位置，Y轴方向的中线要与悬浮按钮的中线在同一水平线上",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "9B84D974-1C53-43C9-A06F-2F3662524888",
+    "isCompleted": false,
+    "createdAt": 789309998.22928,
+    "content": "添加自定义扩展功能，设计扩展API，至于API功能，我还在设想中，现阶段主要完成对macOS提供的辅助功能API的调用，比如快捷指令",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "4B652A24-4954-4712-9358-23DA2457747D",
+    "isCompleted": false,
+    "createdAt": 789309869.3711491,
+    "content": "先告诉我现在每条笔记的组件的代码名称叫什么，现在修改为胶囊的英文，即笔记胶囊的翻译",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "5FBCCFE0-CD7A-4797-A7A8-BB9440407855",
+    "isCompleted": false,
+    "createdAt": 789309799.818744,
+    "content": "选择知识按钮时，后面也显示一个添加按钮，类似于列表后面的添加，只有选中知识时才显示，并且点击后，只在对应的知识分组中创建",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "0CDAA0C5-93D2-45D5-9526-0CD8A7E9CBBB",
+    "isCompleted": true,
+    "createdAt": 789309756.118644,
+    "content": "添加分组自定义排序功能",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "870676A5-B265-463B-BC59-ACA2F5CCA0A1",
+    "isCompleted": false,
+    "createdAt": 789309696.731796,
+    "content": "修改所有可以设置自定义图标的位置，可以从macos已有的内置符号中选择，而不是现在的输入框",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "91E81079-FD03-427F-91F2-7B7C623CE3CE",
+    "isCompleted": false,
+    "createdAt": 789309539.4835911,
+    "content": "笔记退出编辑时，显示一个通知，通知的效果，参看将剪切板保存为笔记",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "92B1E9BA-ED32-47CF-A64D-2507949790C1",
+    "isCompleted": false,
+    "createdAt": 789309515.1752439,
+    "content": "修改编辑为双击，现在是单击",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "89007D38-3634-404B-8DDA-BDC4FED3F76D",
+    "isCompleted": false,
+    "createdAt": 789309454.490612,
+    "content": "修改浮动按钮的默认样式是胶囊，现在的默认样式叫圆圈",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "0393B167-C08D-4F24-9406-293A1F48FA3B",
+    "isCompleted": true,
+    "createdAt": 789309251.8636851,
+    "content": "笔记背景的随机里，去除蓝色，因为输入的光标也是蓝色，会看不见，如果有更好的方案，先告诉我",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "87FD67B8-4512-4A21-BA74-E572D17B497F",
+    "isCompleted": false,
+    "createdAt": 789309211.1940079,
+    "content": "给顶部的按钮和分组按钮添加其他色彩",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "CAB3F0E7-A633-4DA8-AE4F-597B3532B682",
+    "isCompleted": true,
+    "createdAt": 789294648.5292978,
+    "content": "知识的分组与笔记列表的分组是不一样的，所以应该有两个默认分组的设置",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "8BE77EE8-A3A1-4960-BCB6-CBF4028043B5",
+    "isCompleted": true,
+    "createdAt": 789294625.0556421,
+    "content": "现在默认分组在默认状态下没有值，修改",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "A2B725DC-32A1-4945-AD7C-7776F6278044",
+    "isCompleted": false,
+    "createdAt": 789294028.0777869,
+    "content": "添加工作休息提醒，监听鼠标键盘和视频播放活动，设计算法，判断用户是否在电脑前操作，若是，可以设置工作时长，根据健康指南，提醒休息，避免久坐，并且禁止操作电脑，除非长按屏幕上的取消休息按钮，需要注意的是，需要考虑到用户在观看视频时没有操作鼠标键盘的情况",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "22F97885-3941-4DF0-AE0A-EF55760754B6",
+    "isCompleted": true,
+    "createdAt": 789294020.60831,
+    "content": "添加复制监听，如果有新的东西复制到系统剪切板，播放声音",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "95D2FC4C-0CE7-41D5-A069-A4ED9B0EA7BB",
+    "isCompleted": true,
+    "createdAt": 789293177.71018,
+    "content": "修改悬浮球形状可选项，只能保留胶囊和默认，胶囊的形状与笔记ITEM类似，像个胶囊一样",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "AB66F1E1-E21D-41F3-8D2D-52803EED6358",
+    "isCompleted": true,
+    "createdAt": 789291660.6258578,
+    "content": "添加透明度设置功能，可以设置笔记本身和笔记顶部工具栏和分组的透明度，也可以设置悬浮按钮呼吸效果的透明度",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "08DDE855-EA24-4FB7-9751-5FFEE6AA02E6",
+    "isCompleted": true,
+    "createdAt": 789272860.234689,
+    "content": "优化设置页面，使其像其他macOS应用一样，顶部是一排图标，用来切换不同类型的设置",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "B3101E27-4453-4A48-8FF7-EA05E46E73E9",
+    "isCompleted": true,
+    "createdAt": 789272688.4469209,
+    "content": "修改悬浮球添加方式，直接在状态栏右键菜单上点添加悬浮球即可，无须设置里设置数量",
+    "colorHex": "#22C55E"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "CD2938C3-3F78-4BF0-851B-EB17CA10F633",
+    "isCompleted": true,
+    "createdAt": 789272591.607521,
+    "content": "添加群组默认显示方式，可以在设置里设置，进入列表时，可以显示哪个分组",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "C06B3E00-11DA-4AC9-A09E-2A8A717BC90A",
+    "isCompleted": true,
+    "createdAt": 789219534.824933,
+    "content": "优化设置窗口，使其更加符合现代macOS应用",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "C3139A46-AB4D-463A-BBA1-C5AD820009DE",
+    "id": "09C0CE05-D413-4047-BC1F-9D6007FF4C14",
+    "isCompleted": false,
+    "createdAt": 789217327.704937,
+    "content": "CLOUDFLARE",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "BDDD951A-87A9-4882-8FD8-5C228888AA2D",
+    "isCompleted": true,
+    "createdAt": 789215082.516381,
+    "content": "用户点击笔记胶囊以外的任何地方，效果要与直接点击回车一样，即完成编辑",
+    "colorHex": "#3B82F6"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "84E3CE00-AD82-480F-B2AA-AACF2BF0CC24",
+    "isCompleted": true,
+    "createdAt": 789215031.416549,
+    "content": "不同悬浮球可以有不同的颜色，大小，另外添加形状功能",
+    "colorHex": "#A855F7"
+  },
+  {
+    "groupId": "1166754C-EDC8-44FF-A8CE-8B277FFD66AA",
+    "id": "2421F75B-0EE8-4C08-8902-0C6725076AF0",
+    "isCompleted": false,
+    "createdAt": 789208941.588772,
+    "content": "依据最终代码，将最终实现的关键流程更新到分析文档的总结中",
+    "colorHex": "#EF4444"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "B4104E57-83C2-4E3A-930E-93C200D85298",
+    "isCompleted": true,
+    "createdAt": 789150193.3278251,
+    "content": "笔记在新建时的随机颜色，新笔记颜色不要与相邻的上面那个笔记颜色相同",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "4774E104-F462-45BF-AAFE-F6A79C20DD30",
+    "isCompleted": true,
+    "createdAt": 789149498.580405,
+    "content": "将浮动按钮设置的功能扩展下，添加显示隐藏某个窗口的功能，在没有确定窗口时，点击后，让用户在当前屏幕已有窗口上点击选择，从而确定窗口，确定后，以后再点击悬浮按钮，就是显示或隐藏这个窗口，如果窗口关闭了，回归到选择窗口",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "215A8EE9-9B04-4D4F-8E3E-0972B37ED37D",
+    "isCompleted": true,
+    "createdAt": 789149298.062,
+    "content": "新建一个笔记，内容比较多时，会导致笔记高度超过容器高度，此时容器高度没有自动根据内容高度自适应，而是需要切换一下列表才行，修复",
+    "colorHex": "#F59E0B"
+  },
+  {
+    "groupId": "0A74656D-07EC-42FB-ACD5-4F0801A57960",
+    "id": "35ED2FC9-DCCB-4111-9CA9-7953DE59CF3A",
+    "isCompleted": true,
+    "createdAt": 789149234.1344271,
+    "content": "不是悬浮按钮设置是否显示图标，而是笔记面板的分组和知识面板的分组，在创建的时候，可以自定以图标，在设置里，可以选择显示图标，还是显示名称，还是都显示",
+    "colorHex": "#22C55E"
+  }
+]

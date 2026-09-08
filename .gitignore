@@ -1,0 +1,11 @@
+.swiftpm/
+build/
+.build
+.build/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+.DS_Store
+*.dmg
+dist/
+.git-worktrees/

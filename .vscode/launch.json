@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:X}",
+            "name": "Debug FloatingButton",
+            "target": "FloatingButton",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug FloatingButton"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:X}",
+            "name": "Release FloatingButton",
+            "target": "FloatingButton",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release FloatingButton"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:X}",
+            "name": "Debug AIX",
+            "target": "AIX",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug AIX"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:X}",
+            "name": "Release AIX",
+            "target": "AIX",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release AIX"
+        }
+    ]
+}
