@@ -1437,15 +1437,19 @@ struct NoteListView: View {
         .padding(.bottom, 8)
     }
 
+    @ViewBuilder
     private var noteListContentView: some View {
-        ScrollViewReader { proxy in
-            ScrollView(showsIndicators: false) {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    if viewMode == .clipboard {
-                        ClipboardPreviewView()
-                    } else if viewMode == .favorites {
-                        FavoriteListContentView()
-                    } else if viewMode == .trash {
+        if viewMode == .clipboard {
+            ClipboardPreviewView()
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+        } else {
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        if viewMode == .favorites {
+                            FavoriteListContentView()
+                        } else if viewMode == .trash {
                         TrashListView()
                     } else if noteManager.isGroupLocked(selectedGroupId) {
                         // 锁定分组：显示密码输入界面
@@ -1567,6 +1571,7 @@ struct NoteListView: View {
             .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20))
         }
     }
+}
 }
 
 struct GroupManagerView: View {
@@ -2073,13 +2078,76 @@ struct ClipboardContentHeightKey: PreferenceKey {
     }
 }
 
+struct ClipboardImageView: View {
+    let item: ClipboardItem
+    @State private var thumbnail: NSImage?
+    @State private var isLoading = true
+    
+    var body: some View {
+        Group {
+            if let image = thumbnail {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 150)
+                    .cornerRadius(4)
+            } else if isLoading {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.1))
+                    .frame(height: 80)
+                    .overlay(
+                        ProgressView()
+                            .scaleEffect(0.6)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white.opacity(0.6)))
+                    )
+            } else {
+                Text(L10n.tr("clipboard.cannotPreview"))
+                    .font(.caption)
+                    .italic()
+                    .foregroundColor(.white.opacity(0.5))
+            }
+        }
+        .onAppear {
+            loadThumbnail()
+        }
+        .onChange(of: item.id) { _, _ in
+            loadThumbnail()
+        }
+    }
+    
+    private func loadThumbnail() {
+        ClipboardThumbnailCache.shared.getThumbnail(for: item) { image in
+            self.thumbnail = image
+            self.isLoading = false
+        }
+    }
+}
+
 struct ClipboardPreviewView: View {
     @StateObject private var clipboardManager = ClipboardManager.shared
     @StateObject private var configManager = FloatingButtonConfigManager.shared
-    @State private var listHeight: CGFloat = 0
+    @State private var searchText = ""
+    
+    private var filteredHistory: [ClipboardItem] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if query.isEmpty {
+            return clipboardManager.history
+        }
+        return clipboardManager.history.filter { item in
+            switch item.type {
+            case .text, .file:
+                if let text = item.stringValue {
+                    return text.localizedCaseInsensitiveContains(query)
+                }
+                return false
+            case .image, .other:
+                return false
+            }
+        }
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(L10n.tr("clipboard.history"))
                     .font(.headline)
@@ -2091,26 +2159,57 @@ struct ClipboardPreviewView: View {
             }
             .padding(.horizontal, 4)
             
+            // 常驻搜索框
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.white.opacity(0.6))
+                    .font(.system(size: 12))
+                
+                TextField("搜索文本或文件路径...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+                
+                if !searchText.isEmpty {
+                    Button(action: {
+                        searchText = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.7))
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.black.opacity(0.25))
+            )
+            .padding(.horizontal, 2)
+            
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 12) {
-                    if clipboardManager.history.isEmpty {
+                LazyVStack(spacing: 12) {
+                    if filteredHistory.isEmpty {
                         VStack(spacing: 12) {
-                            Image(systemName: "doc.on.clipboard")
+                            Image(systemName: searchText.isEmpty ? "doc.on.clipboard" : "magnifyingglass")
                                 .font(.system(size: 32))
                                 .foregroundColor(.white.opacity(0.3))
-                            Text(L10n.tr("clipboard.noRecords"))
+                            Text(searchText.isEmpty ? L10n.tr("clipboard.noRecords") : "未找到匹配的剪切板记录")
                                 .foregroundColor(.white.opacity(0.6))
+                                .font(.system(size: 13))
                                 .italic()
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 40)
                     } else {
-                        ForEach(clipboardManager.history) { item in
+                        ForEach(filteredHistory) { item in
                             ClipboardItemRow(item: item)
                         }
                     }
                 }
-                .padding(.trailing, 2) // Optional: avoid scrollbar overlap if visible
+                .padding(.trailing, 2)
             }
             .frame(height: 340) // Fixed height as requested
         }
@@ -2198,12 +2297,8 @@ struct ClipboardItemRow: View {
             }
             
             Group {
-                if item.type == .image, let image = item.imageValue {
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 150)
-                        .cornerRadius(4)
+                if item.type == .image {
+                    ClipboardImageView(item: item)
                 } else if let text = item.stringValue {
                     Text(text)
                         .lineLimit(3)

@@ -51,6 +51,7 @@ let package = Package(
                 "Utility/SnapManager.swift",
                 "Utility/AudioActivityMonitor.swift",
                 "Utility/ClipboardManager.swift",
+                "Utility/ClipboardThumbnailCache.swift",
                 "Utility/TTSService.swift",
                 "Utility/TTSCacheManager.swift",
                 "Utility/HotkeyParser.swift",
