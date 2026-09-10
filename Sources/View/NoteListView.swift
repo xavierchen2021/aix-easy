@@ -647,11 +647,9 @@ struct NoteItemView: View {
                             }
                         }
                 }
-            )    .contentShape(Rectangle())
-                .onLongPressGesture {
-                    NoteManager.shared.toggleKnowledge(id: note.id)
-                }
-                .contextMenu {
+            )
+            .contentShape(Rectangle())
+            .contextMenu {
                         Button(L10n.tr("notes.editInLargeWindow")) {
                             LargeNoteWindow.show(note: note)
                         }
