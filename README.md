@@ -5,11 +5,9 @@
 # AIX 功能全览
 
 <p align="center">
-  <img src="doc/CleanShot 2026-09-08 at 13.29.36@2x.png" alt="AIX Screenshot" />
-</p>
-
-<p align="center">
-  <img src="doc/CleanShot 2026-09-08 at 08.15.43@2x.png" alt="AIX Screenshot" />
+  <img src="doc/CleanShot 2026-09-08 at 13.29.36@2x.png" alt="AIX Screenshot 1" height="380" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="doc/CleanShot 2026-09-08 at 08.15.43@2x.png" alt="AIX Screenshot 2" height="380" />
 </p>
 
 ## 一、悬浮球系统
