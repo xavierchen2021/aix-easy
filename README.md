@@ -2,6 +2,10 @@
   <img src="Sources/Resources/AppIcon.png" width="128" height="128" alt="AIX Logo" />
 </p>
 
+<p align="center">
+  <b>简体中文</b> | <a href="README_EN.md">English</a>
+</p>
+
 # AIX 功能全览
 
 <p align="center">
