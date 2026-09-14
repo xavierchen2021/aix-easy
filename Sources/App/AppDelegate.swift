@@ -16,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var attachedWindow: NSWindow? // 笔记窗口当前依附的悬浮球窗口
     private var attachedButtonIndex: Int? // 笔记窗口当前依附的悬浮球索引
     private var currentNoteMode: NoteListView.ViewMode = .all
+    private var wasNoteWindowVisibleBeforeGlobalHide: Bool = false // 记录全局隐藏前笔记面板是否处于显示状态
     // private var welcomeWindow: WelcomeWindow? // 欢迎窗口（已废弃）
     private var groupDragOrigins: [Int: NSPoint] = [:] // 分组拖拽时记录各成员初始位置
     
@@ -1414,6 +1415,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         if allVisibleButtonsAreShown {
+            // 记录隐藏前笔记面板是否处于显示状态
+            wasNoteWindowVisibleBeforeGlobalHide = (noteWindow?.isVisible == true)
             // 隐藏所有未被用户隐藏的悬浮球
             noteWindow?.orderOut(nil)
             for index in visibleByUserIndices {
@@ -1431,6 +1434,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
             configManager.setGlobalHiddenState(false)
+
+            // 如果隐藏前笔记面板是显示的，恢复面板显示并激活
+            if wasNoteWindowVisibleBeforeGlobalHide {
+                wasNoteWindowVisibleBeforeGlobalHide = false
+                if let attachedWin = attachedWindow,
+                   let attachedIdx = attachedButtonIndex,
+                   attachedIdx < floatingWindows.count,
+                   floatingWindows[attachedIdx] === attachedWin,
+                   !configManager.isButtonHiddenByUser(index: attachedIdx),
+                   let noteWin = noteWindow {
+                    noteWin.updateHeightToFit()
+                    updateNoteWindowPosition()
+                    noteWin.orderFrontRegardless()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        NSApp.activate(ignoringOtherApps: true)
+                        noteWin.makeKey()
+                    }
+                }
+            }
         }
 
         setupStatusBarMenu()
@@ -1443,6 +1465,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             FloatingButtonConfigManager.shared.removeUserHiddenButton(index: buttonIndex)
             if FloatingButtonConfigManager.shared.getGlobalHiddenState() {
                 FloatingButtonConfigManager.shared.setGlobalHiddenState(false)
+                wasNoteWindowVisibleBeforeGlobalHide = false
             }
             let window = floatingWindows[buttonIndex]
             window.orderFrontRegardless()
