@@ -346,6 +346,8 @@
 "reminder.timeForBreak" = "该休息一下了";
 "reminder.restLater" = "稍后休息";
 "reminder.resting" = "休息中";
+"reminder.restCompleted" = "休息已结束";
+"reminder.startWork" = "开始工作";
 
 // MARK: - 大窗口
 "largeWindow.typeQuestion" = "输入问题开始对话";

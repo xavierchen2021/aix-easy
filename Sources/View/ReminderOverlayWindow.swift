@@ -7,16 +7,18 @@ import SwiftUI
 final class ReminderOverlayState: ObservableObject {
     @Published var message: String
     @Published var remainingTime: String?
+    @Published var isRestCompleted: Bool
 
-    init(message: String, remainingTime: String?) {
+    init(message: String, remainingTime: String?, isRestCompleted: Bool = false) {
         self.message = message
         self.remainingTime = remainingTime
+        self.isRestCompleted = isRestCompleted
     }
 }
 
 // MARK: - 主控屏蒙版窗口
 
-/// 主控屏幕蒙版窗口（包含倒计时与「稍后休息」控制按钮）
+/// 主控屏幕蒙版窗口（包含倒计时与「稍后休息」/「开始工作」控制按钮）
 final class ReminderPrimaryOverlayWindow: NSWindow {
     private let state: ReminderOverlayState
     private let onDismissAction: () -> Void
@@ -68,16 +70,26 @@ final class ReminderPrimaryOverlayWindow: NSWindow {
     override var canBecomeMain: Bool { true }
 
     override func keyDown(with event: NSEvent) {
-        // 屏蔽所有键盘按键（包括 ESC），确保只能通过点击「稍后休息」按钮或倒计时归零解除
+        // 倒计时结束前屏蔽所有按键；倒计时结束后允许回车键（Return/Enter: 36, 76）或空格键（Space: 49）触发开始工作
+        if state.isRestCompleted {
+            let code = event.keyCode
+            if code == 36 || code == 76 || code == 49 {
+                onDismissAction()
+                return
+            }
+        }
     }
 }
 
 // MARK: - 副屏蒙版窗口
 
-/// 副屏蒙版窗口（显示深色遮罩背景与「休息中」文字提示，无倒计时与按钮，拦截鼠标键盘）
+/// 副屏蒙版窗口（显示深色遮罩背景与状态提示，拦截鼠标键盘）
 final class ReminderSecondaryOverlayWindow: NSWindow {
+    private let state: ReminderOverlayState
 
-    init(screen: NSScreen) {
+    init(screen: NSScreen, state: ReminderOverlayState) {
+        self.state = state
+
         super.init(
             contentRect: screen.frame,
             styleMask: [.borderless, .fullSizeContentView],
@@ -109,7 +121,7 @@ final class ReminderSecondaryOverlayWindow: NSWindow {
     }
 
     private func setupContentView() {
-        let rootView = ReminderSecondaryOverlayView()
+        let rootView = ReminderSecondaryOverlayView(state: state)
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = frame
         hostingView.autoresizingMask = [.width, .height]
@@ -140,6 +152,10 @@ class ReminderOverlayWindow {
         didSet {
             state.remainingTime = remainingTime
         }
+    }
+    var isRestCompleted: Bool {
+        get { state.isRestCompleted }
+        set { state.isRestCompleted = newValue }
     }
 
     private let state: ReminderOverlayState
@@ -188,6 +204,7 @@ class ReminderOverlayWindow {
 
         state.message = message
         state.remainingTime = remainingTime
+        state.isRestCompleted = false
 
         // 确定当前鼠标光标所在的屏幕作为主控屏幕
         let mouseLoc = NSEvent.mouseLocation
@@ -214,14 +231,24 @@ class ReminderOverlayWindow {
         // 为其余屏幕创建副屏蒙版窗口
         var sWins: [ReminderSecondaryOverlayWindow] = []
         for screen in allScreens where screen != primaryScreen {
-            let sWin = ReminderSecondaryOverlayWindow(screen: screen)
+            let sWin = ReminderSecondaryOverlayWindow(screen: screen, state: state)
             sWins.append(sWin)
         }
         self.secondaryWindows = sWins
 
-        // 安装事件监听（吞掉全局按键与滚轮事件）
+        // 安装事件监听（未完成时屏蔽所有键盘事件；完成后允许按 Return/Enter 或 Space 快捷开始工作）
         removeEventMonitors()
-        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { _ in nil }
+        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return nil }
+            if self.state.isRestCompleted {
+                let code = event.keyCode
+                if code == 36 || code == 76 || code == 49 {
+                    self.dismiss()
+                    return nil
+                }
+            }
+            return nil
+        }
         flagsChangedMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { _ in nil }
         scrollWheelMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { _ in nil }
 
@@ -322,11 +349,11 @@ struct ReminderPrimaryOverlayView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 40) {
-                Image(systemName: "bed.double.fill")
+                Image(systemName: state.isRestCompleted ? "checkmark.circle.fill" : "bed.double.fill")
                     .font(.system(size: 80))
-                    .foregroundColor(.white)
+                    .foregroundColor(state.isRestCompleted ? .green : .white)
 
-                Text(L10n.tr("reminder.timeForBreak"))
+                Text(state.isRestCompleted ? L10n.tr("reminder.restCompleted") : L10n.tr("reminder.timeForBreak"))
                     .font(.system(size: 48, weight: .bold))
                     .foregroundColor(.white)
 
@@ -337,27 +364,37 @@ struct ReminderPrimaryOverlayView: View {
                     .padding(.horizontal, 80)
                     .fixedSize(horizontal: false, vertical: true)
 
-                // 倒计时
+                // 倒计时（休息进行中显示倒计时；结束后保持 00:00）
                 if let time = state.remainingTime {
                     Text(time)
                         .font(.system(size: 64, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(state.isRestCompleted ? .white.opacity(0.6) : .white.opacity(0.85))
                 }
 
                 Button(action: onDismiss) {
-                    Text(L10n.tr("reminder.restLater"))
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 60)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(isHoveringButton ? Color.blue : Color.blue.opacity(0.8))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
+                    HStack(spacing: 10) {
+                        if state.isRestCompleted {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 18))
+                        }
+                        Text(state.isRestCompleted ? L10n.tr("reminder.startWork") : L10n.tr("reminder.restLater"))
+                            .font(.system(size: 20, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 60)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                state.isRestCompleted
+                                    ? (isHoveringButton ? Color.blue : Color.blue.opacity(0.85))
+                                    : (isHoveringButton ? Color.blue.opacity(0.8) : Color.blue.opacity(0.6))
+                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
                 }
                 .buttonStyle(PlainButtonStyle())
                 .onHover { hovering in
@@ -379,14 +416,16 @@ struct ReminderPrimaryOverlayView: View {
 // MARK: - SwiftUI 视图（副屏）
 
 struct ReminderSecondaryOverlayView: View {
+    @ObservedObject var state: ReminderOverlayState
+
     var body: some View {
         ZStack {
             VStack(spacing: 32) {
-                Image(systemName: "bed.double.fill")
+                Image(systemName: state.isRestCompleted ? "checkmark.circle.fill" : "bed.double.fill")
                     .font(.system(size: 80))
-                    .foregroundColor(.white.opacity(0.85))
+                    .foregroundColor(state.isRestCompleted ? .green : .white.opacity(0.85))
 
-                Text(L10n.tr("reminder.resting"))
+                Text(state.isRestCompleted ? L10n.tr("reminder.restCompleted") : L10n.tr("reminder.resting"))
                     .font(.system(size: 48, weight: .bold))
                     .foregroundColor(.white.opacity(0.85))
             }

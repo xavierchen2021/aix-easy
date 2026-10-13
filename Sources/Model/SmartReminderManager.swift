@@ -73,12 +73,17 @@ class SmartReminderManager {
         self.reminderOverlay = reminderOverlay
         self.inputMonitor = InputMonitor(idleThreshold: config.idleThreshold)
         
-        // 蒙版按钮回调：用户点击"稍后休息"
+        // 蒙版按钮回调：用户点击"稍后休息"或休息结束后的"开始工作"
         reminderOverlay.onContinue = { [weak self] in
             guard let self = self else { return }
+            let completed = self.reminderOverlay.isRestCompleted
             self.dismissOverlay()
             self.resetWork()
-            ReminderLogger.shared.logAction("用户点击稍后休息，工作计时重置")
+            if completed {
+                ReminderLogger.shared.logAction("用户点击开始工作，新工作周期启动")
+            } else {
+                ReminderLogger.shared.logAction("用户点击稍后休息，工作计时重置")
+            }
         }
         
         // 锁屏/解锁
@@ -258,11 +263,13 @@ class SmartReminderManager {
             reminderOverlay.remainingTime = timeStr
             reminderOverlay.message = config.reminderMessage
             
-            // 休息时间到 → 自动关闭蒙版
+            // 休息时间到 → 触发完成状态并播放结束音效（不自动关闭，等待用户点击按钮）
             if restTime >= config.restDuration {
-                dismissOverlay()
-                resetWork()
-                ReminderLogger.shared.logEvent("✅ 休息时间到，自动关闭蒙版，工作计时重置")
+                if !reminderOverlay.isRestCompleted {
+                    reminderOverlay.isRestCompleted = true
+                    playSound(config.restEndSoundName)
+                    ReminderLogger.shared.logEvent("🔔 休息时间到，播放休息结束音效，等待用户确认开始工作")
+                }
             }
         }
         
@@ -277,6 +284,7 @@ class SmartReminderManager {
         
         let m = Int(config.restDuration) / 60
         let s = Int(config.restDuration) % 60
+        reminderOverlay.isRestCompleted = false
         reminderOverlay.message = config.reminderMessage
         reminderOverlay.remainingTime = String(format: "%02d:%02d", m, s)
         reminderOverlay.show()
@@ -289,6 +297,7 @@ class SmartReminderManager {
         if reminderOverlay.isVisible {
             reminderOverlay.close()
         }
+        reminderOverlay.isRestCompleted = false
     }
     
     // MARK: - 重置

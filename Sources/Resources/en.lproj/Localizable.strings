@@ -346,6 +346,8 @@
 "reminder.timeForBreak" = "Time for a break";
 "reminder.restLater" = "Rest Later";
 "reminder.resting" = "Resting";
+"reminder.restCompleted" = "Break Finished";
+"reminder.startWork" = "Start Working";
 
 // MARK: - Large Window
 "largeWindow.typeQuestion" = "Type a question to start";
