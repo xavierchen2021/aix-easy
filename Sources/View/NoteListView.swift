@@ -230,6 +230,7 @@ struct CustomTextEditor: NSViewRepresentable {
 struct AINoteItemView: View {
     var note: Note
     var onDelete: () -> Void
+    var onColorFilterClick: ((String) -> Void)? = nil
     
     @State private var inputText: String = ""
     @State private var inputHeight: CGFloat = 20
@@ -401,6 +402,25 @@ struct AINoteItemView: View {
                         }
                     }
                 }
+                
+                Menu("设置颜色") {
+                    ForEach(Note.colorPalette) { item in
+                        Button(action: {
+                            NoteManager.shared.updateNoteColor(id: currentNote.id, colorHex: item.hex)
+                        }) {
+                            if currentNote.colorHex.uppercased() == item.hex.uppercased() {
+                                Text("✓ \(item.name)")
+                            } else {
+                                Text(item.name)
+                            }
+                        }
+                    }
+                }
+                
+                Button("按此颜色过滤") {
+                    onColorFilterClick?(currentNote.colorHex)
+                }
+                
                 Divider()
                 if currentNote.pinnedAt != nil {
                     Button(L10n.tr("notes.unpin")) {
@@ -423,7 +443,7 @@ struct AINoteItemView: View {
     private var noteBackground: some View {
         Group {
             if configManager.config.noteTheme == .gradient {
-                let baseColor = Color(hex: note.colorHex)
+                let baseColor = Color(hex: currentNote.colorHex)
                 let opacity = configManager.config.noteOpacity
                 ZStack {
                     RoundedRectangle(cornerRadius: 20)
@@ -445,7 +465,7 @@ struct AINoteItemView: View {
                 }
             } else {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: note.colorHex).opacity(configManager.config.noteOpacity))
+                    .fill(Color(hex: currentNote.colorHex).opacity(configManager.config.noteOpacity))
             }
         }
         .overlay(
@@ -531,6 +551,7 @@ struct NoteItemView: View {
     var onDelete: () -> Void
     var onToggle: () -> Void
     var onTagClick: ((String) -> Void)? = nil
+    var onColorFilterClick: ((String) -> Void)? = nil
     
     @State private var content: String
     @State private var isHovered = false
@@ -543,13 +564,19 @@ struct NoteItemView: View {
     @State private var displayHeight: CGFloat = 0 // 记录显示状态下的实际高度
     @FocusState private var isFocused: Bool
     @StateObject private var configManager = FloatingButtonConfigManager.shared
+    @StateObject private var noteManager = NoteManager.shared
     
-    init(note: Note, selectedTag: String? = nil, onDelete: @escaping () -> Void, onToggle: @escaping () -> Void, onTagClick: ((String) -> Void)? = nil) {
+    private var currentNote: Note {
+        noteManager.notes.first(where: { $0.id == note.id }) ?? note
+    }
+    
+    init(note: Note, selectedTag: String? = nil, onDelete: @escaping () -> Void, onToggle: @escaping () -> Void, onTagClick: ((String) -> Void)? = nil, onColorFilterClick: ((String) -> Void)? = nil) {
         self.note = note
         self.selectedTag = selectedTag
         self.onDelete = onDelete
         self.onToggle = onToggle
         self.onTagClick = onTagClick
+        self.onColorFilterClick = onColorFilterClick
         _content = State(initialValue: note.content)
         _tagInput = State(initialValue: "")
         _editingTags = State(initialValue: note.tags)
@@ -624,9 +651,9 @@ struct NoteItemView: View {
                                     .font(.system(size: 10, weight: .medium))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 3)
-                                    .background(Capsule().fill(selectedTag == tagText ? Color.blue.opacity(0.9) : Color.cyan.opacity(0.6)))
+                                    .background(Capsule().fill(Color.blue.opacity(0.9)))
                                     .overlay(
-                                        Capsule().stroke(Color.white.opacity(selectedTag == tagText ? 0.9 : 0.25), lineWidth: 1)
+                                        Capsule().stroke(Color.white.opacity(selectedTag == tagText ? 0.95 : 0.3), lineWidth: selectedTag == tagText ? 1.5 : 1)
                                     )
                                     .foregroundColor(.white)
                             }
@@ -678,6 +705,24 @@ struct NoteItemView: View {
                             Button("清除所有标签") {
                                 NoteManager.shared.updateNoteTag(id: note.id, tag: nil)
                             }
+                        }
+                        
+                        Menu("设置颜色") {
+                            ForEach(Note.colorPalette) { item in
+                                Button(action: {
+                                    NoteManager.shared.updateNoteColor(id: note.id, colorHex: item.hex)
+                                }) {
+                                    if currentNote.colorHex.uppercased() == item.hex.uppercased() {
+                                        Text("✓ \(item.name)")
+                                    } else {
+                                        Text(item.name)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Button("按此颜色过滤") {
+                            onColorFilterClick?(currentNote.colorHex)
                         }
                         
                         Menu("移动到分组") {
@@ -795,7 +840,7 @@ struct NoteItemView: View {
         .background(
             Group {
                 if configManager.config.noteTheme == .gradient {
-                    let baseColor = Color(hex: note.colorHex)
+                    let baseColor = Color(hex: currentNote.colorHex)
                     let opacity = (!note.isKnowledge && note.isCompleted) ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity
                     ZStack {
                         // 1. 底色
@@ -820,7 +865,7 @@ struct NoteItemView: View {
                     }
                 } else {
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(hex: note.colorHex).opacity((!note.isKnowledge && note.isCompleted) ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity))
+                        .fill(Color(hex: currentNote.colorHex).opacity((!note.isKnowledge && note.isCompleted) ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity))
                 }
             }
             .overlay(
@@ -884,7 +929,7 @@ struct NoteItemView: View {
                         .foregroundColor(editingTags.count >= 3 ? .orange : .secondary)
                 }
                 
-                // 已有标签胶囊展示区
+                // 当前笔记已选标签胶囊展示区
                 if !editingTags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
@@ -915,11 +960,50 @@ struct NoteItemView: View {
                         .foregroundColor(.secondary)
                 }
                 
+                // 可选已有标签列表
+                let availableTags = noteManager.allExistingTags.filter { !editingTags.contains($0) }
+                if !availableTags.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("选择已有标签：")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                ForEach(availableTags, id: \.self) { tag in
+                                    Button(action: {
+                                        if editingTags.count < 3 {
+                                            editingTags.append(tag)
+                                        }
+                                    }) {
+                                        HStack(spacing: 3) {
+                                            Image(systemName: "plus")
+                                                .font(.system(size: 8, weight: .bold))
+                                            Text(tag)
+                                                .font(.system(size: 11))
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Capsule().fill(Color.blue.opacity(0.15)))
+                                        .overlay(
+                                            Capsule().stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                                        )
+                                        .foregroundColor(.primary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(editingTags.count >= 3)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+                
                 // 输入与添加行（达到 3 个时禁用输入与添加）
                 HStack(spacing: 6) {
                     TextField(editingTags.count >= 3 ? "最多添加3个标签" : "输入标签名称", text: $tagInput)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 150)
+                        .frame(width: 170)
                         .disabled(editingTags.count >= 3)
                         .onSubmit {
                             addTagFromInput()
@@ -956,7 +1040,7 @@ struct NoteItemView: View {
                 }
             }
             .padding(14)
-            .frame(width: 230)
+            .frame(width: 260)
         }
     }
     
@@ -1037,6 +1121,7 @@ struct NoteListView: View {
     @State private var viewMode: ViewMode
     @State private var selectedGroupId: UUID
     @State private var selectedTag: String? = nil // 当前被选中的标签过滤条件
+    @State private var selectedColorHex: String? = nil // 当前被选中的颜色过滤条件
     @State private var isShowingGroupManager = false
     @State private var editingNoteId: UUID? = nil // 跟踪当前编辑的笔记ID
     @State private var globalPasswordInput = "" // 全局密码输入
@@ -1086,6 +1171,7 @@ struct NoteListView: View {
                 !$0.isDeleted &&
                 $0.groupId == selectedGroupId &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
+                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
                 (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
             }
         case .completed:
@@ -1094,6 +1180,7 @@ struct NoteListView: View {
                 !$0.isDeleted &&
                 $0.groupId == selectedGroupId &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
+                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
                 (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
             }
         case .knowledge:
@@ -1103,6 +1190,7 @@ struct NoteListView: View {
                 !$0.isAI &&
                 $0.groupId == selectedGroupId &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
+                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
                 (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
             }
         case .ai:
@@ -1110,6 +1198,7 @@ struct NoteListView: View {
                 $0.isAI &&
                 !$0.isDeleted &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
+                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
                 (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
             }
         case .clipboard:
@@ -1155,6 +1244,10 @@ struct NoteListView: View {
             if isNoteMode && (viewMode == .all || viewMode == .completed || viewMode == .knowledge) {
                 groupSelectorView
             }
+
+            if isNoteMode && selectedTag != nil {
+                filterStatusBar
+            }
             
             noteListContentView
         }
@@ -1169,6 +1262,7 @@ struct NoteListView: View {
         }
         .onChange(of: viewMode) { _, newValue in
             selectedTag = nil
+            selectedColorHex = nil
             resetPagination()
             // 切换模式时，如果当前选中的分组不属于该模式，则切换到默认分组
             let currentGroup = noteManager.groups.first { $0.id == selectedGroupId }
@@ -1187,10 +1281,15 @@ struct NoteListView: View {
         }
         .onChange(of: selectedGroupId) { _, _ in
             selectedTag = nil
+            selectedColorHex = nil
             resetPagination()
             NotificationCenter.default.post(name: Notification.Name("NoteViewModeChanged"), object: nil)
         }
         .onChange(of: selectedTag) { _, _ in
+            resetPagination()
+            NotificationCenter.default.post(name: Notification.Name("NoteViewModeChanged"), object: nil)
+        }
+        .onChange(of: selectedColorHex) { _, _ in
             resetPagination()
             NotificationCenter.default.post(name: Notification.Name("NoteViewModeChanged"), object: nil)
         }
@@ -1350,6 +1449,43 @@ struct NoteListView: View {
         .padding(.bottom, 8)
     }
 
+    private var filterStatusBar: some View {
+        HStack(spacing: 8) {
+            Text("筛选:")
+                .font(.system(size: 11))
+                .foregroundColor(.white.opacity(0.7))
+            
+            if let tag = selectedTag {
+                HStack(spacing: 4) {
+                    Label(tag, systemImage: "tag.fill")
+                        .font(.system(size: 10, weight: .medium))
+                    Button(action: { selectedTag = nil }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 8, weight: .bold))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.blue.opacity(0.9)))
+                .foregroundColor(.white)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                selectedTag = nil
+            }) {
+                Text("清除")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 6)
+    }
+
     private var groupSelectorView: some View {
         let groups = noteManager.getSortedGroups(isKnowledgeGroup: viewMode == .knowledge)
             .filter { $0.id != NoteGroup.colorGroupId } // 过滤颜色列表分组
@@ -1496,6 +1632,12 @@ struct NoteListView: View {
                                     DispatchQueue.main.async {
                                         noteManager.deleteNote(id: note.id)
                                     }
+                                }, onColorFilterClick: { colorHex in
+                                    if selectedColorHex?.uppercased() == colorHex.uppercased() {
+                                        selectedColorHex = nil
+                                    } else {
+                                        selectedColorHex = colorHex
+                                    }
                                 })
                                 .id(note.id)
                                 .onAppear {
@@ -1515,6 +1657,12 @@ struct NoteListView: View {
                                         selectedTag = nil
                                     } else {
                                         selectedTag = clickedTag
+                                    }
+                                }, onColorFilterClick: { colorHex in
+                                    if selectedColorHex?.uppercased() == colorHex.uppercased() {
+                                        selectedColorHex = nil
+                                    } else {
+                                        selectedColorHex = colorHex
                                     }
                                 })
                                 .id(note.id)
@@ -1550,9 +1698,40 @@ struct NoteListView: View {
                             .preference(key: ViewSizeKey.self, value: geometry.size)
                     }
                 )
-                .padding(.top, 8) // 添加顶部内边距，防止阴影和边框被遮挡
+                .padding(.top, selectedColorHex != nil ? 18 : 8) // 按颜色过滤时增加顶部内边距，给右上角叉号留出呼吸感
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
+            }
+            .background(
+                Group {
+                    if let colorHex = selectedColorHex {
+                        UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20)
+                            .fill(Color(hex: colorHex).opacity(0.18))
+                            .overlay(
+                                UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20)
+                                    .stroke(Color(hex: colorHex).opacity(0.35), lineWidth: 1)
+                            )
+                    }
+                }
+            )
+            .overlay(alignment: .topTrailing) {
+                if selectedColorHex != nil {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedColorHex = nil
+                        }
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white.opacity(0.85))
+                            .background(Circle().fill(Color.black.opacity(0.3)))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 6)
+                    .padding(.trailing, 14)
+                    .help("取消颜色过滤")
+                    .transition(.scale.combined(with: .opacity))
+                }
             }
             .onPreferenceChange(ViewSizeKey.self) { _ in
                 // 当内部内容大小变化时，通知窗口调整高度
@@ -1567,6 +1746,7 @@ struct NoteListView: View {
                 }
             }
             .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20))
+            .animation(.easeInOut(duration: 0.2), value: selectedColorHex)
         }
     }
 }

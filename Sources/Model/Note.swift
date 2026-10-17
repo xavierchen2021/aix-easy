@@ -154,12 +154,29 @@ struct Note: Identifiable, Codable, Equatable {
         "#6366F1"  // 靛蓝色
     ]
 
+    static let colorPalette: [NotePresetColor] = [
+        NotePresetColor(hex: "#A855F7", name: "紫色"),
+        NotePresetColor(hex: "#22C55E", name: "绿色"),
+        NotePresetColor(hex: "#3B82F6", name: "蓝色"),
+        NotePresetColor(hex: "#EF4444", name: "红色"),
+        NotePresetColor(hex: "#F59E0B", name: "橙黄"),
+        NotePresetColor(hex: "#EC4899", name: "粉色"),
+        NotePresetColor(hex: "#06B6D4", name: "青色"),
+        NotePresetColor(hex: "#6366F1", name: "靛蓝")
+    ]
+
     static func randomColorHex(excluding: [String]? = nil) -> String {
         let colors = presetColors
         let excludingColors = excluding ?? []
         let availableColors = colors.filter { !excludingColors.contains($0) }
         return availableColors.randomElement() ?? colors.randomElement()!
     }
+}
+
+struct NotePresetColor: Identifiable, Hashable {
+    let hex: String
+    let name: String
+    var id: String { hex }
 }
 
 @MainActor
@@ -621,6 +638,26 @@ class NoteManager: ObservableObject {
             let inProgressNotes = notes.filter { $0.isInProgress && !$0.isDeleted }
             MemoryManager.shared.nonIntrusivePrompt(for: inProgressNotes)
         }
+    }
+
+    /// 更新笔记颜色并持久化
+    func updateNoteColor(id: UUID, colorHex: String) {
+        if let index = notes.firstIndex(where: { $0.id == id }) {
+            notes[index].colorHex = colorHex
+            notes[index].modifiedAt = Date()
+            try? store.insertNote(notes[index])
+        }
+    }
+
+    /// 获取所有有效笔记中已存在的标签列表（去重且排序）
+    var allExistingTags: [String] {
+        var set = Set<String>()
+        for note in notes where !note.isDeleted {
+            for tag in note.tags {
+                set.insert(tag)
+            }
+        }
+        return set.sorted()
     }
     
     func clearAllNotes() {
