@@ -123,8 +123,6 @@ final class EdgeHideManager {
     private var isRevealed: [UUID: Bool] = [:]
     /// 各分组在刚贴边松手隐藏后，是否正在等待鼠标移出边缘区域（抑制松手瞬间反向弹出）
     private var isWaitingForMouseExit: [UUID: Bool] = [:]
-    /// 依附于各分组的笔记/列表窗口在隐藏前记录的显示位置
-    private var hiddenNoteOrigins: [UUID: CGPoint] = [:]
 
     /// 笔记/列表窗口提供者（由 AppDelegate 注入，用于列表窗口同步移动）
     var noteWindowProvider: (() -> (note: NSWindow?, attachedTo: NSWindow?))?
@@ -194,7 +192,6 @@ final class EdgeHideManager {
             hiddenStates.removeValue(forKey: group.id)
             isRevealed.removeValue(forKey: group.id)
             isWaitingForMouseExit.removeValue(forKey: group.id)
-            hiddenNoteOrigins.removeValue(forKey: group.id)
             persistHiddenStates()
             if hiddenStates.isEmpty { stopMouseMonitor() }
             Logger.shared.log("📍 贴边隐藏：分组「\(group.name)」拖离边缘，解除贴边隐藏状态")
@@ -223,7 +220,6 @@ final class EdgeHideManager {
             hiddenStates.removeValue(forKey: group.id)
             isRevealed.removeValue(forKey: group.id)
             isWaitingForMouseExit.removeValue(forKey: group.id)
-            hiddenNoteOrigins.removeValue(forKey: group.id)
             persistHiddenStates()
             if hiddenStates.isEmpty { stopMouseMonitor() }
             Logger.shared.log("📍 贴边隐藏：分组「\(group.name)」拖拽后解除旧隐藏状态，重新判定")
@@ -348,7 +344,7 @@ final class EdgeHideManager {
                                 targets.append((win, CGPoint(x: cur.x - state.slideOffset.width, y: cur.y - state.slideOffset.height)))
                             }
                         }
-                        animateWindows(targets: targets, noteTarget: nil)
+                        animateWindows(targets: targets)
                         Logger.shared.log("📍 贴边隐藏：成员 \(removedMembers) 已移出分组，滑回屏幕内")
                     }
                     if state.memberIndices != newMembers {
@@ -385,11 +381,10 @@ final class EdgeHideManager {
                 targets.append((window, CGPoint(x: current.x - state.slideOffset.width, y: current.y - state.slideOffset.height)))
             }
         }
-        animateWindows(targets: targets, noteTarget: nil)
+        animateWindows(targets: targets)
         hiddenStates.removeValue(forKey: groupId)
         isRevealed.removeValue(forKey: groupId)
         isWaitingForMouseExit.removeValue(forKey: groupId)
-        hiddenNoteOrigins.removeValue(forKey: groupId)
         Logger.shared.log("📍 贴边隐藏：\(reason)，成员 \(state.memberIndices) 已滑回屏幕内并清理状态")
     }
 
@@ -424,7 +419,7 @@ final class EdgeHideManager {
                     let cur = win.frame.origin
                     targets.append((win, CGPoint(x: cur.x + slide.width, y: cur.y + slide.height)))
                 }
-                animateWindows(targets: targets, noteTarget: nil)
+                animateWindows(targets: targets)
                 var newState = state
                 newState.screenFrame = referenceFrame
                 newState.slideOffset = slide
@@ -442,7 +437,7 @@ final class EdgeHideManager {
                     let cur = win.frame.origin
                     targets.append((win, CGPoint(x: cur.x + translation.width, y: cur.y + translation.height)))
                 }
-                animateWindows(targets: targets, noteTarget: nil)
+                animateWindows(targets: targets)
                 var newState = state
                 newState.screenFrame = referenceFrame
                 newState.slideOffset = slide
@@ -644,13 +639,7 @@ final class EdgeHideManager {
             targets.append((window, origin))
         }
 
-        var noteTarget: (window: NSWindow, target: CGPoint)?
-        if let note = attachedNoteWindow(for: memberWindows),
-           let noteHidden = hiddenNoteOrigins[groupId] {
-            noteTarget = (note, noteHidden)
-        }
-
-        animateWindows(targets: targets, noteTarget: noteTarget)
+        animateWindows(targets: targets)
     }
 
     private func animateToHidden(groupId: UUID, state: HiddenState, memberWindows: [NSWindow]) {
@@ -665,18 +654,15 @@ final class EdgeHideManager {
             targets.append((window, CGPoint(x: origin.x + state.slideOffset.width, y: origin.y + state.slideOffset.height)))
         }
 
-        var noteTarget: (window: NSWindow, target: CGPoint)?
-        if let note = attachedNoteWindow(for: memberWindows) {
-            let currentOrigin = note.frame.origin
-            hiddenNoteOrigins[groupId] = currentOrigin
-            let target = CGPoint(x: currentOrigin.x + state.slideOffset.width, y: currentOrigin.y + state.slideOffset.height)
-            noteTarget = (note, target)
-        }
-
-        animateWindows(targets: targets, noteTarget: noteTarget)
+        let noteToHide = attachedNoteWindow(for: memberWindows)
+        animateWindows(targets: targets, noteToHide: noteToHide, slideOffset: state.slideOffset)
     }
 
-    private func animateWindows(targets: [(window: NSWindow, target: CGPoint)], noteTarget: (window: NSWindow, target: CGPoint)?) {
+    private func animateWindows(
+        targets: [(window: NSWindow, target: CGPoint)],
+        noteToHide: NSWindow? = nil,
+        slideOffset: CGSize = .zero
+    ) {
         guard !targets.isEmpty else { return }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
@@ -686,9 +672,18 @@ final class EdgeHideManager {
                 let rect = NSRect(origin: item.target, size: item.window.frame.size)
                 item.window.animator().setFrame(rect, display: true)
             }
-            if let noteTarget = noteTarget {
-                let rect = NSRect(origin: noteTarget.target, size: noteTarget.window.frame.size)
-                noteTarget.window.animator().setFrame(rect, display: true)
+            if let note = noteToHide {
+                // 按钮滑出消失时，打开的笔记面板同步平移并淡出
+                let noteTarget = note.frame.offsetBy(dx: slideOffset.width, dy: slideOffset.height)
+                note.animator().setFrame(noteTarget, display: true)
+                note.animator().alphaValue = 0.0
+            }
+        } completionHandler: {
+            if let note = noteToHide {
+                DispatchQueue.main.async {
+                    note.orderOut(nil)
+                    note.alphaValue = 1.0
+                }
             }
         }
     }
@@ -697,8 +692,11 @@ final class EdgeHideManager {
     private func attachedNoteWindow(for memberWindows: [NSWindow]) -> NSWindow? {
         guard let provider = noteWindowProvider else { return nil }
         let (note, attachedTo) = provider()
-        guard let note = note, let attachedTo = attachedTo, note.isVisible else { return nil }
-        return memberWindows.contains(where: { $0 === attachedTo }) ? note : nil
+        guard let note = note, note.isVisible else { return nil }
+        if let attachedTo = attachedTo {
+            return memberWindows.contains(where: { $0 === attachedTo }) ? note : nil
+        }
+        return note
     }
 
     // MARK: - 几何计算与辅助
