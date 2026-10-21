@@ -243,12 +243,24 @@ struct FloatingButtonConfig: Codable {
         var name: String
         var memberIndices: [Int]
         var layout: GroupLayout
+        var enableEdgeHide: Bool // 是否启用贴边隐藏
 
-        init(id: UUID = UUID(), name: String = "分组", memberIndices: [Int] = [], layout: GroupLayout = .horizontal) {
+        init(id: UUID = UUID(), name: String = "分组", memberIndices: [Int] = [], layout: GroupLayout = .horizontal, enableEdgeHide: Bool = false) {
             self.id = id
             self.name = name
             self.memberIndices = memberIndices
             self.layout = layout
+            self.enableEdgeHide = enableEdgeHide
+        }
+
+        // 自定义解码：兼容没有 enableEdgeHide 字段的旧配置，避免旧数据解码失败
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            name = try container.decode(String.self, forKey: .name)
+            memberIndices = try container.decode([Int].self, forKey: .memberIndices)
+            layout = try container.decode(GroupLayout.self, forKey: .layout)
+            enableEdgeHide = try container.decodeIfPresent(Bool.self, forKey: .enableEdgeHide) ?? false
         }
     }
 
@@ -896,6 +908,20 @@ class FloatingButtonConfigManager: ObservableObject {
             save()
             NotificationCenter.default.post(name: Notification.Name("floatingButtonConfigChanged"), object: nil)
         }
+    }
+
+    /// 更新分组贴边隐藏开关
+    func updateGroupEdgeHide(groupId: UUID, enabled: Bool) {
+        if let idx = config.buttonGroups.firstIndex(where: { $0.id == groupId }) {
+            config.buttonGroups[idx].enableEdgeHide = enabled
+            save()
+            NotificationCenter.default.post(name: Notification.Name("floatingButtonConfigChanged"), object: nil)
+        }
+    }
+
+    /// 指定悬浮球所在分组是否启用贴边隐藏
+    func isEdgeHideEnabled(for buttonIndex: Int) -> Bool {
+        return getGroup(for: buttonIndex)?.enableEdgeHide ?? false
     }
 
     /// 删除分组

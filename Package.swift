@@ -42,6 +42,7 @@ let package = Package(
                 "Model/FavoriteStore.swift",
                 "Model/BrowserDetector.swift",
                 "Model/AutoHideManager.swift",
+                "Model/EdgeHideManager.swift",
                 "Model/BackupConfig.swift",
                 "Model/BackupManager.swift",
                 "Model/AIService.swift",

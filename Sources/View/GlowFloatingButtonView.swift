@@ -301,16 +301,16 @@ class GlowFloatingButtonView: NSView {
             buttonLayer.add(scale, forKey: "clickUp")
             glowLayer.add(scale, forKey: "clickUp")
             
-            // 通知分组拖拽结束
-            NotificationCenter.default.post(name: FloatingWindow.dragEndNotification, object: window)
-            
+            // 通知分组拖拽结束（真实拖拽）
+            NotificationCenter.default.post(name: FloatingWindow.dragEndNotification, object: window, userInfo: ["isRealDrag": true])
+
             // 发送窗口移动通知
             NotificationCenter.default.post(name: NSWindow.didMoveNotification, object: window)
             return
         }
-        
+
         // 通知分组拖拽结束（非拖拽点击也要结束）
-        NotificationCenter.default.post(name: FloatingWindow.dragEndNotification, object: window)
+        NotificationCenter.default.post(name: FloatingWindow.dragEndNotification, object: window, userInfo: ["isRealDrag": false])
         
         // 松开 - 弹回正常状态
         let scale = CASpringAnimation(keyPath: "transform.scale")
@@ -670,6 +670,18 @@ class GlowFloatingButtonView: NSView {
         layoutPopup.tag = 6000 + buttonIndex
         contentView.addSubview(layoutPopup)
 
+        // 贴边隐藏开关（依赖分组，未分组时置灰）
+        let edgeHideLabel = NSTextField(labelWithString: "贴边隐藏:")
+        edgeHideLabel.frame = NSRect(x: 20, y: 190, width: 80, height: 24)
+        contentView.addSubview(edgeHideLabel)
+
+        let edgeHideToggle = NSButton(checkboxWithTitle: "", target: self, action: #selector(edgeHideToggleChanged(_:)))
+        edgeHideToggle.frame = NSRect(x: 110, y: 190, width: 200, height: 24)
+        edgeHideToggle.tag = 9000 + buttonIndex
+        edgeHideToggle.state = (currentGroup?.enableEdgeHide ?? false) ? .on : .off
+        edgeHideToggle.isEnabled = (currentGroup != nil)
+        contentView.addSubview(edgeHideToggle)
+
         // 重置按钮
         let resetButton = NSButton(title: L10n.tr("button.resetToDefault"), target: self, action: #selector(resetCustomization(_:)))
         resetButton.frame = NSRect(x: 20, y: 20, width: 100, height: 32)
@@ -714,6 +726,17 @@ class GlowFloatingButtonView: NSView {
         // 形状变化处理在应用时进行
     }
 
+    @objc private func edgeHideToggleChanged(_ sender: NSButton) {
+        let index = sender.tag - 9000
+        let configManager = FloatingButtonConfigManager.shared
+
+        // 重新获取分组，不复用面板打开时的旧值
+        guard let group = configManager.getGroup(for: index) else { return }
+
+        // 即时生效并保存
+        configManager.updateGroupEdgeHide(groupId: group.id, enabled: sender.state == .on)
+    }
+
     @objc private func groupSelectionChanged(_ sender: NSPopUpButton) {
         let index = sender.tag - 5000
         guard let window = sender.window, let contentView = window.contentView else { return }
@@ -740,7 +763,7 @@ class GlowFloatingButtonView: NSView {
                     if let firstMemberIndex = group.memberIndices.first(where: { $0 != index }) {
                         let memberSize = configManager.getButtonSize(index: firstMemberIndex)
                         let memberShape = configManager.getButtonShape(index: firstMemberIndex)
-                        
+
                         // 更新大小滑块
                         if let sizeSlider = contentView.viewWithTag(1000 + index) as? NSSlider {
                             sizeSlider.doubleValue = Double(memberSize)
@@ -749,7 +772,7 @@ class GlowFloatingButtonView: NSView {
                                 valueLabel.stringValue = "\(Int(memberSize))px"
                             }
                         }
-                        
+
                         // 更新形状下拉框
                         if let shapePopup = contentView.viewWithTag(3000 + index) as? NSPopUpButton {
                             if let shapeIdx = FloatingButtonConfig.ButtonShape.allCases.firstIndex(of: memberShape) {
@@ -758,6 +781,21 @@ class GlowFloatingButtonView: NSView {
                         }
                     }
                 }
+            }
+        }
+
+        // 同步贴边隐藏复选框
+        if let edgeHideToggle = contentView.viewWithTag(9000 + index) as? NSButton {
+            if isGroupSelected {
+                let groupIndex = sender.indexOfSelectedItem - 1
+                if groupIndex < configManager.config.buttonGroups.count {
+                    let group = configManager.config.buttonGroups[groupIndex]
+                    edgeHideToggle.state = group.enableEdgeHide ? .on : .off
+                    edgeHideToggle.isEnabled = true
+                }
+            } else {
+                edgeHideToggle.state = .off
+                edgeHideToggle.isEnabled = false
             }
         }
     }
@@ -790,7 +828,13 @@ class GlowFloatingButtonView: NSView {
         if let layoutPopup = contentView.viewWithTag(6000 + index) as? NSPopUpButton {
             layoutPopup.isEnabled = true
         }
-        
+
+        // 刷新贴边隐藏复选框（新分组默认关闭、可用）
+        if let edgeHideToggle = contentView.viewWithTag(9000 + index) as? NSButton {
+            edgeHideToggle.state = .off
+            edgeHideToggle.isEnabled = true
+        }
+
         // 清空输入框
         nameField.stringValue = ""
     }

@@ -139,7 +139,12 @@ class FloatingWindow: NSPanel {
     override func mouseUp(with event: NSEvent) {
         guard isDragging else { return }
         isDragging = false
-        NotificationCenter.default.post(name: FloatingWindow.dragEndNotification, object: self)
+        // 携带真实拖拽标记（该路径仅在 mouseDown 置位 isDragging 后触发，供 EdgeHideManager 区分消费）
+        NotificationCenter.default.post(
+            name: FloatingWindow.dragEndNotification,
+            object: self,
+            userInfo: ["isRealDrag": true]
+        )
     }
 
 }

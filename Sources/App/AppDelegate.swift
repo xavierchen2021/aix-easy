@@ -37,6 +37,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusBar()
         createFloatingWindow()
 
+        // 注入笔记/列表窗口提供者（贴边隐藏管理器据此判断列表窗口依附关系并同步移动）
+        EdgeHideManager.shared.noteWindowProvider = { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self = self else { return (note: nil, attachedTo: nil) }
+                return (note: self.noteWindow, attachedTo: self.attachedWindow)
+            }
+        }
+
+        // 按持久化的分组隐藏状态恢复悬浮球贴边隐藏（成员窗口放回屏幕外并启用边缘热区监听）
+        EdgeHideManager.shared.restoreOnLaunch(floatingWindows: floatingWindows)
+
         // 初始化插件系统
         PluginRegistry.shared.registerBuiltinPlugins()
 
