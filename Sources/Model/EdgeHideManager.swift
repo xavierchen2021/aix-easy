@@ -124,6 +124,14 @@ final class EdgeHideManager {
     /// 各分组在刚贴边松手隐藏后，是否正在等待鼠标移出边缘区域（抑制松手瞬间反向弹出）
     private var isWaitingForMouseExit: [UUID: Bool] = [:]
 
+    /// 判断指定按钮索引当前是否正处于贴边隐藏状态（滑出屏幕外）
+    func isButtonHiddenInEdge(_ buttonIndex: Int) -> Bool {
+        let configManager = FloatingButtonConfigManager.shared
+        guard let group = configManager.getGroup(for: buttonIndex) else { return false }
+        guard hiddenStates[group.id] != nil else { return false }
+        return isRevealed[group.id] != true
+    }
+
     /// 笔记/列表窗口提供者（由 AppDelegate 注入，用于列表窗口同步移动）
     var noteWindowProvider: (() -> (note: NSWindow?, attachedTo: NSWindow?))?
 
@@ -236,8 +244,9 @@ final class EdgeHideManager {
             union = union.union(memberWindow.frame)
         }
 
-        // 统一以含菜单栏的完整 screen.frame 为基准（顶部滑出要越过菜单栏，热区同样基于 frame 顶部）
-        guard let screenFrame = (window.screen ?? NSScreen.main)?.frame else { return }
+        // 统一以松手处目标屏幕的完整 screen.frame 为基准（顶部滑出要越过菜单栏，热区同样基于 frame 顶部）
+        guard let targetScreen = targetScreen(for: window, union: union) else { return }
+        let screenFrame = targetScreen.frame
 
         // 判定贴近三边：计算包围盒对应边与屏幕边缘的距离
         let leftDist = max(0, union.minX - screenFrame.minX)
@@ -388,63 +397,137 @@ final class EdgeHideManager {
         Logger.shared.log("📍 贴边隐藏：\(reason)，成员 \(state.memberIndices) 已滑回屏幕内并清理状态")
     }
 
+    // MARK: - 屏幕参数校准与自适应
+
+    /// 自动校准隐藏分组状态与屏幕对应关系（启动恢复、屏幕参数变化时调用）
+    /// 确保 screenFrame 与当前实际连接的屏幕一致，revealedOrigins 落在屏幕有效边缘内，slideOffset 正确
+    private func calibrateHiddenState(
+        _ state: HiddenState,
+        for groupId: UUID,
+        windowMap: [Int: NSWindow]
+    ) -> (state: HiddenState, didChange: Bool)? {
+        let memberWindows = state.memberIndices.compactMap { windowMap[$0] }
+        guard !memberWindows.isEmpty else { return nil }
+
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return nil }
+        let mainScreen = NSScreen.main ?? screens[0]
+
+        // 1. 查找目标屏幕：优先精准匹配原 screenFrame，若原屏幕不存在则匹配包含多数 revealedOrigins 的屏幕，最后降级到主屏幕
+        var targetScreen = screens.first(where: { $0.frame == state.screenFrame })
+        if targetScreen == nil {
+            targetScreen = screens.first(where: { screen in
+                state.revealedOrigins.values.contains { screen.frame.contains($0.cgPoint) }
+            }) ?? mainScreen
+        }
+        guard let screen = targetScreen else { return nil }
+        let screenFrame = screen.frame
+
+        // 2. 检查是否需要重新校准（屏幕变化、原屏幕不存在、或历史脏数据坐标超出目标屏幕）
+        var needsRecalibrate = (state.screenFrame != screenFrame)
+        for idx in state.memberIndices {
+            if let origin = state.revealedOrigins[idx]?.cgPoint {
+                // 若坐标偏离目标屏幕过多（>20px），判定为脏数据或屏幕已变更
+                if !screenFrame.insetBy(dx: -20, dy: -20).contains(origin) {
+                    needsRecalibrate = true
+                    break
+                }
+            } else {
+                needsRecalibrate = true
+                break
+            }
+        }
+
+        if !needsRecalibrate {
+            return (state, false)
+        }
+
+        // 3. 计算包围盒并吸附对齐到当前目标屏幕
+        var union = CGRect.null
+        for memberWindow in memberWindows {
+            guard let idx = buttonIndexForWindow(memberWindow) else { continue }
+            let pt = state.revealedOrigins[idx]?.cgPoint
+            let rect: CGRect
+            if let pt = pt, pt.x.isFinite && pt.y.isFinite && abs(pt.x) < 10000 && abs(pt.y) < 10000 {
+                rect = CGRect(origin: pt, size: memberWindow.frame.size)
+            } else {
+                rect = memberWindow.frame
+            }
+            union = union.isNull ? rect : union.union(rect)
+        }
+
+        if union.isNull || union.width <= 0 || union.height <= 0 {
+            union = CGRect(origin: screenFrame.origin, size: CGSize(width: 60, height: 60))
+        }
+
+        // 吸附对齐到边缘
+        var alignDelta = CGSize.zero
+        switch state.edge {
+        case .left:
+            alignDelta.width = screenFrame.minX - union.minX
+            let newMinY = max(screenFrame.minY, min(union.minY, screenFrame.maxY - union.height))
+            alignDelta.height = newMinY - union.minY
+        case .right:
+            alignDelta.width = screenFrame.maxX - union.maxX
+            let newMinY = max(screenFrame.minY, min(union.minY, screenFrame.maxY - union.height))
+            alignDelta.height = newMinY - union.minY
+        case .top:
+            alignDelta.height = screenFrame.maxY - union.maxY
+            let newMinX = max(screenFrame.minX, min(union.minX, screenFrame.maxX - union.width))
+            alignDelta.width = newMinX - union.minX
+        }
+
+        var newRevealedOrigins: [Int: CodablePoint] = [:]
+        for memberWindow in memberWindows {
+            guard let idx = buttonIndexForWindow(memberWindow) else { continue }
+            let basePt = state.revealedOrigins[idx]?.cgPoint ?? memberWindow.frame.origin
+            let alignedPt = CGPoint(x: basePt.x + alignDelta.width, y: basePt.y + alignDelta.height)
+            newRevealedOrigins[idx] = CodablePoint(alignedPt)
+            saveNormalPosition(alignedPt, for: idx)
+        }
+
+        let alignedUnion = union.offsetBy(dx: alignDelta.width, dy: alignDelta.height)
+        let slideOffset = slideOutOffset(for: state.edge, union: alignedUnion, screenFrame: screenFrame)
+
+        let newState = HiddenState(
+            edge: state.edge,
+            screenFrame: screenFrame,
+            memberIndices: state.memberIndices,
+            slideOffset: slideOffset,
+            revealedOrigins: newRevealedOrigins
+        )
+
+        return (newState, true)
+    }
+
     // MARK: - 屏幕参数变化处理
 
     private func handleScreenParametersChanged() {
         guard !hiddenStates.isEmpty else { return }
-        let screens = NSScreen.screens
+        var windowByIndex: [Int: NSWindow] = [:]
+        for window in NSApp.windows {
+            if let index = buttonIndexForWindow(window) {
+                windowByIndex[index] = window
+            }
+        }
+
         var didChange = false
-
         for (groupId, state) in hiddenStates {
-            if isRevealed[groupId] == true { continue }
-            let memberWindows = state.memberIndices.compactMap { windowForButtonIndex($0) }
-            guard !memberWindows.isEmpty else { continue }
-            var union = memberWindows[0].frame
-            for memberWindow in memberWindows.dropFirst() {
-                union = union.union(memberWindow.frame)
-            }
-
-            let referenceScreen = screens.first { $0.frame == state.screenFrame }
-                ?? memberWindows[0].screen
-                ?? NSScreen.main
-            guard let referenceScreen else { continue }
-            let referenceFrame = referenceScreen.frame
-
-            if referenceFrame == state.screenFrame && !union.intersects(referenceFrame) { continue }
-
-            if union.intersects(referenceFrame) {
-                let slide = slideOutOffset(for: state.edge, union: union, screenFrame: referenceFrame)
+            guard isRevealed[groupId] != true else { continue }
+            guard let result = calibrateHiddenState(state, for: groupId, windowMap: windowByIndex) else { continue }
+            if result.didChange {
+                hiddenStates[groupId] = result.state
+                didChange = true
+                let memberWindows = result.state.memberIndices.compactMap { windowByIndex[$0] }
                 var targets: [(window: NSWindow, target: CGPoint)] = []
                 for win in memberWindows {
-                    let cur = win.frame.origin
-                    targets.append((win, CGPoint(x: cur.x + slide.width, y: cur.y + slide.height)))
+                    guard let idx = buttonIndexForWindow(win),
+                          let origin = result.state.revealedOrigins[idx]?.cgPoint else { continue }
+                    targets.append((win, CGPoint(x: origin.x + result.state.slideOffset.width, y: origin.y + result.state.slideOffset.height)))
                 }
                 animateWindows(targets: targets)
-                var newState = state
-                newState.screenFrame = referenceFrame
-                newState.slideOffset = slide
-                hiddenStates[groupId] = newState
-                Logger.shared.log("📍 贴边隐藏：屏幕参数变化，隐藏分组已重新滑出屏幕")
-            } else {
-                let revealedUnion = edgeRevealedRect(union: union, edge: state.edge, screenFrame: referenceFrame)
-                let slide = slideOutOffset(for: state.edge, union: revealedUnion, screenFrame: referenceFrame)
-                let translation = CGSize(
-                    width: revealedUnion.minX + slide.width - union.minX,
-                    height: revealedUnion.minY + slide.height - union.minY
-                )
-                var targets: [(window: NSWindow, target: CGPoint)] = []
-                for win in memberWindows {
-                    let cur = win.frame.origin
-                    targets.append((win, CGPoint(x: cur.x + translation.width, y: cur.y + translation.height)))
-                }
-                animateWindows(targets: targets)
-                var newState = state
-                newState.screenFrame = referenceFrame
-                newState.slideOffset = slide
-                hiddenStates[groupId] = newState
-                Logger.shared.log("📍 贴边隐藏：屏幕参数变化，隐藏分组已按新屏幕重新归位")
+                Logger.shared.log("📍 贴边隐藏：屏幕参数变化，隐藏分组已校准归位并重新滑出")
             }
-            didChange = true
         }
 
         if didChange { persistHiddenStates() }
@@ -475,8 +558,20 @@ final class EdgeHideManager {
             restoredStates[groupId] = restored
         }
 
-        hiddenStates = restoredStates
-        isRevealed = restoredStates.mapValues { _ in false }
+        var calibratedStates: [UUID: HiddenState] = [:]
+        var hasChanges = false
+        for (groupId, state) in restoredStates {
+            if let result = calibrateHiddenState(state, for: groupId, windowMap: windowByIndex) {
+                calibratedStates[groupId] = result.state
+                if result.didChange {
+                    hasChanges = true
+                    Logger.shared.log("📍 贴边隐藏：启动自检校准分组「\(groupId)」至屏幕 \(result.state.screenFrame)")
+                }
+            }
+        }
+
+        hiddenStates = calibratedStates
+        isRevealed = calibratedStates.mapValues { _ in false }
         isWaitingForMouseExit = [:]
 
         guard !hiddenStates.isEmpty else {
@@ -507,8 +602,12 @@ final class EdgeHideManager {
             }
         }
 
-        persistHiddenStates()
+        if hasChanges { persistHiddenStates() }
         startMouseMonitor()
+        // 启动后稍作延时，立即主动检测一次当前鼠标位置，若鼠标已在热区则立刻响应
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.processMouseLocation()
+        }
         Logger.shared.log("📍 贴边隐藏：启动恢复 \(hiddenStates.count) 个隐藏分组")
     }
 
@@ -594,19 +693,20 @@ final class EdgeHideManager {
         }
     }
 
-    /// 鼠标是否位于分组隐藏屏幕对应边缘的唤回热区（screen.frame 的 20px 边缘条带）
+    /// 鼠标是否位于分组隐藏屏幕对应边缘的唤回热区（screen.frame 的 20px 边缘条带，带 5px 容错）
     private func isMouseInHotZone(_ location: NSPoint, state: HiddenState) -> Bool {
         let frame = state.screenFrame
+        let tolerance: CGFloat = 5
         switch state.edge {
         case .left:
-            return location.x >= frame.minX && location.x <= frame.minX + hotZoneWidth
-                && location.y >= frame.minY && location.y <= frame.maxY
+            return location.x >= frame.minX - tolerance && location.x <= frame.minX + hotZoneWidth
+                && location.y >= frame.minY - tolerance && location.y <= frame.maxY + tolerance
         case .right:
-            return location.x >= frame.maxX - hotZoneWidth && location.x <= frame.maxX
-                && location.y >= frame.minY && location.y <= frame.maxY
+            return location.x >= frame.maxX - hotZoneWidth && location.x <= frame.maxX + tolerance
+                && location.y >= frame.minY - tolerance && location.y <= frame.maxY + tolerance
         case .top:
-            return location.y >= frame.maxY - hotZoneWidth && location.y <= frame.maxY
-                && location.x >= frame.minX && location.x <= frame.maxX
+            return location.y >= frame.maxY - hotZoneWidth && location.y <= frame.maxY + tolerance
+                && location.x >= frame.minX - tolerance && location.x <= frame.maxX + tolerance
         }
     }
 
@@ -630,6 +730,11 @@ final class EdgeHideManager {
     private func animateToRevealed(groupId: UUID, state: HiddenState, memberWindows: [NSWindow]) {
         var targets: [(window: NSWindow, target: CGPoint)] = []
         for window in memberWindows {
+            if !window.isVisible {
+                window.orderFrontRegardless()
+            }
+            window.alphaValue = 1.0
+
             guard let idx = buttonIndexForWindow(window),
                   let origin = state.revealedOrigins[idx]?.cgPoint else {
                 let current = window.frame.origin
@@ -701,9 +806,46 @@ final class EdgeHideManager {
 
     // MARK: - 几何计算与辅助
 
+    /// 获取给定窗口/包围盒所依附的目标屏幕（支持多显示器）
+    private func targetScreen(for window: NSWindow, union: CGRect) -> NSScreen? {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return NSScreen.main }
+
+        // 1. 优先使用松手时鼠标指针所在的屏幕（最符合用户操作直觉）
+        let mouseLocation = NSEvent.mouseLocation
+        if let screenWithMouse = screens.first(where: { $0.frame.contains(mouseLocation) }) {
+            return screenWithMouse
+        }
+
+        // 2. 检查与包围盒相交面积最大的屏幕
+        var bestScreen: NSScreen?
+        var maxIntersectionArea: CGFloat = 0
+        for screen in screens {
+            let intersection = screen.frame.intersection(union)
+            if !intersection.isNull && !intersection.isEmpty {
+                let area = intersection.width * intersection.height
+                if area > maxIntersectionArea {
+                    maxIntersectionArea = area
+                    bestScreen = screen
+                }
+            }
+        }
+        if let bestScreen = bestScreen {
+            return bestScreen
+        }
+
+        // 3. 兜底策略：包围盒中心点所在的屏幕 -> window.screen -> 主屏幕
+        let center = CGPoint(x: union.midX, y: union.midY)
+        if let screenWithCenter = screens.first(where: { $0.frame.contains(center) }) {
+            return screenWithCenter
+        }
+
+        return window.screen ?? NSScreen.main
+    }
+
     /// 保存成员贴边吸附后的屏幕内正常坐标到 UserDefaults，防止被屏幕外坐标覆盖
     private func saveNormalPosition(_ position: CGPoint, for index: Int) {
-        let key = "floatingButtonPosition_\(index)"
+        let key = "floatingWindowPosition_\(index)"
         let pointValue = NSValue(point: position)
         if let data = try? NSKeyedArchiver.archivedData(withRootObject: pointValue, requiringSecureCoding: true) {
             UserDefaults.standard.set(data, forKey: key)

@@ -1268,7 +1268,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 查找窗口在数组中的索引
         if let index = floatingWindows.firstIndex(where: { $0 == window }) {
-            savePosition(window.frame.origin, key: positionKey(for: index))
+            // 如果悬浮球当前处于贴边隐藏在屏幕外的状态，避免将屏幕外的隐藏坐标覆盖保存
+            if !EdgeHideManager.shared.isButtonHiddenInEdge(index) {
+                savePosition(window.frame.origin, key: positionKey(for: index))
+            }
             
             // 笔记窗口跟随移动
             if noteWindow?.isVisible == true && attachedWindow == window {
@@ -1323,9 +1326,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let configManager = FloatingButtonConfigManager.shared
         if let group = configManager.getGroup(for: draggedIndex) {
-            // 保存同组所有成员位置
+            // 保存同组所有成员位置（排除处于贴边隐藏在屏幕外的成员）
             for memberIndex in group.memberIndices {
-                if memberIndex < floatingWindows.count {
+                if memberIndex < floatingWindows.count && !EdgeHideManager.shared.isButtonHiddenInEdge(memberIndex) {
                     savePosition(floatingWindows[memberIndex].frame.origin, key: positionKey(for: memberIndex))
                 }
             }
