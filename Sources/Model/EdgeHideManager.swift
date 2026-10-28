@@ -135,12 +135,17 @@ final class EdgeHideManager {
     /// 笔记/列表窗口提供者（由 AppDelegate 注入，用于列表窗口同步移动）
     var noteWindowProvider: (() -> (note: NSWindow?, attachedTo: NSWindow?))?
 
-    /// 全局鼠标移动监听（其他应用中的移动）
-    private var globalMonitor: Any?
-    /// 本地鼠标移动监听（本应用中的移动）
-    private var localMonitor: Any?
+    /// 全局鼠标移动监听（其他应用中的移动，用于热区唤回）
+    private var globalMoveMonitor: Any?
+    /// 本地鼠标移动监听（本应用中的移动，用于热区唤回）
+    private var localMoveMonitor: Any?
     /// 节流：上次处理鼠标位置的时间
     private var lastMonitorProcessTime: Date = .distantPast
+
+    /// 全局鼠标点击监听（用于点击窗口外隐藏）
+    private var globalClickMonitor: Any?
+    /// 本地鼠标点击监听（用于点击窗口外隐藏）
+    private var localClickMonitor: Any?
 
     // MARK: - 初始化
 
@@ -611,41 +616,75 @@ final class EdgeHideManager {
         Logger.shared.log("📍 贴边隐藏：启动恢复 \(hiddenStates.count) 个隐藏分组")
     }
 
-    // MARK: - 热区监听
+    // MARK: - 热区与点击监听
 
-    /// 启动全局 + 本地鼠标移动监听（仅在存在隐藏分组时运行）
+    /// 启动全局 + 本地鼠标监听（热区唤回 + 点击窗口外隐藏，仅在存在隐藏分组时运行）
     private func startMouseMonitor() {
         guard !hiddenStates.isEmpty else { return }
-        guard globalMonitor == nil && localMonitor == nil else { return }
+        startMoveMonitors()
+        startClickMonitors()
+    }
 
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
+    private func startMoveMonitors() {
+        guard globalMoveMonitor == nil && localMoveMonitor == nil else { return }
+
+        globalMoveMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
             self?.processMouseLocation()
         }
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
+        localMoveMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
             self?.processMouseLocation()
             return event
         }
-        Logger.shared.log("📍 贴边隐藏：热区监听已启动（隐藏分组数 \(hiddenStates.count)）")
+        Logger.shared.log("📍 贴边隐藏：热区移动监听已启动（隐藏分组数 \(hiddenStates.count)）")
+    }
+
+    private func startClickMonitors() {
+        guard globalClickMonitor == nil && localClickMonitor == nil else { return }
+
+        let clickTypes: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown]
+
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: clickTypes) { [weak self] _ in
+            self?.handleMouseClick()
+        }
+        localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: clickTypes) { [weak self] event in
+            self?.handleMouseClick()
+            return event
+        }
+        Logger.shared.log("📍 贴边隐藏：点击监听已启动")
     }
 
     private func stopMouseMonitor() {
-        guard globalMonitor != nil || localMonitor != nil else {
-            lastMonitorProcessTime = .distantPast
-            return
-        }
-        if let monitor = globalMonitor {
-            NSEvent.removeMonitor(monitor)
-            globalMonitor = nil
-        }
-        if let monitor = localMonitor {
-            NSEvent.removeMonitor(monitor)
-            localMonitor = nil
-        }
+        stopMoveMonitors()
+        stopClickMonitors()
         lastMonitorProcessTime = .distantPast
-        Logger.shared.log("📍 贴边隐藏：热区监听已停止")
     }
 
-    /// 处理鼠标位置：命中唤回热区或保持显示区域时显示分组，否则滑出隐藏
+    private func stopMoveMonitors() {
+        if let monitor = globalMoveMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalMoveMonitor = nil
+        }
+        if let monitor = localMoveMonitor {
+            NSEvent.removeMonitor(monitor)
+            localMoveMonitor = nil
+        }
+        Logger.shared.log("📍 贴边隐藏：热区移动监听已停止")
+    }
+
+    private func stopClickMonitors() {
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
+        if let monitor = localClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            localClickMonitor = nil
+        }
+        Logger.shared.log("📍 贴边隐藏：点击监听已停止")
+    }
+
+    /// 处理鼠标位置：命中唤回热区或保持显示区域时唤回分组显示
+    /// （贴边隐藏仅在点击窗口外部时触发，hover 离开窗口不再触发隐藏）
     private func processMouseLocation() {
         let now = Date()
         guard now.timeIntervalSince(lastMonitorProcessTime) >= monitorThrottleInterval else { return }
@@ -667,7 +706,7 @@ final class EdgeHideManager {
             let inActiveArea = inHotZone || inKeepVisible
             let revealed = isRevealed[groupId] ?? false
 
-            // 若刚松手隐藏，正在等待用户鼠标离开边缘区域
+            // 若刚松手隐藏（或边缘点击隐藏），正在等待用户鼠标离开边缘区域
             if isWaitingForMouseExit[groupId] == true {
                 if inActiveArea {
                     // 鼠标尚未移开边缘，保持隐藏抑制唤回
@@ -684,13 +723,80 @@ final class EdgeHideManager {
                 animateToRevealed(groupId: groupId, state: state, memberWindows: memberWindows)
                 isRevealed[groupId] = true
                 Logger.shared.log("📍 贴边隐藏：鼠标进入热区，分组已唤回显示")
-            } else if !inActiveArea && revealed {
-                // 滑出：整组以绝对坐标滑到屏幕外
-                animateToHidden(groupId: groupId, state: state, memberWindows: memberWindows)
-                isRevealed[groupId] = false
-                Logger.shared.log("📍 贴边隐藏：鼠标离开，分组已滑出隐藏")
             }
         }
+    }
+
+    /// 处理鼠标点击：当点击位置在唤回分组的窗口外部时，触发滑出隐藏
+    private func handleMouseClick() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.handleMouseClick()
+            }
+            return
+        }
+
+        guard !hiddenStates.isEmpty else { return }
+
+        // 仅处理当前处于唤回显示状态的分组
+        let revealedGroupIds = hiddenStates.keys.filter { isRevealed[$0] == true }
+        guard !revealedGroupIds.isEmpty else { return }
+
+        let clickLocation = NSEvent.mouseLocation
+
+        for groupId in revealedGroupIds {
+            guard let state = hiddenStates[groupId] else { continue }
+            let memberWindows = state.memberIndices.compactMap { windowForButtonIndex($0) }
+            guard !memberWindows.isEmpty else { continue }
+
+            // 如果点击位置在分组关联窗口内部，保持显示
+            if isClickInsideGroupWindows(clickLocation, memberWindows: memberWindows) {
+                continue
+            }
+
+            // 点击在窗口外部，整组滑出屏幕隐藏
+            animateToHidden(groupId: groupId, state: state, memberWindows: memberWindows)
+            isRevealed[groupId] = false
+
+            // 若点击位置恰好在边缘热区，设置等待鼠标离开抑制，防止被立刻再次唤回
+            if isMouseInHotZone(clickLocation, state: state) {
+                isWaitingForMouseExit[groupId] = true
+            }
+
+            Logger.shared.log("📍 贴边隐藏：点击窗口外部，分组已滑出隐藏")
+        }
+    }
+
+    /// 判定点击位置是否位于指定分组关联的窗口内部（含悬浮球成员窗口、依附的笔记/列表窗口、颜色列表等）
+    private func isClickInsideGroupWindows(_ location: NSPoint, memberWindows: [NSWindow]) -> Bool {
+        // 1. 悬浮球成员窗口（带 2px 容错外边距）
+        for window in memberWindows {
+            if window.isVisible && window.frame.insetBy(dx: -2, dy: -2).contains(location) {
+                return true
+            }
+        }
+
+        // 2. 依附于该组成员的笔记/列表窗口
+        if let note = attachedNoteWindow(for: memberWindows),
+           note.isVisible && note.frame.insetBy(dx: -2, dy: -2).contains(location) {
+            return true
+        }
+
+        // 3. 颜色列表窗口（若可见）
+        if ColorListWindow.shared.isVisible && ColorListWindow.shared.frame.insetBy(dx: -2, dy: -2).contains(location) {
+            return true
+        }
+
+        // 4. 成员悬浮球对应的个性化设置窗口（若正在打开配置中）
+        for window in NSApp.windows where window.isVisible {
+            if let title = window.title as String?, title.contains("个性化设置") {
+                if window.frame.insetBy(dx: -2, dy: -2).contains(location) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     /// 鼠标是否位于分组隐藏屏幕对应边缘的唤回热区（screen.frame 的 20px 边缘条带，带 5px 容错）
