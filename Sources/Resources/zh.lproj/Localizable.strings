@@ -75,7 +75,6 @@
 "settings.reminders" = "提醒";
 "settings.about" = "关于";
 "settings.hidden" = "隐藏设置";
-"settings.ai" = "AI";
 "settings.backup" = "备份";
 
 // MARK: - 设置 - 通用
@@ -161,8 +160,6 @@
 "settings.defaultGroup" = "默认分组";
 "settings.defaultNoteGroup" = "默认笔记分组";
 "settings.defaultNoteGroupDesc" = "笔记列表默认显示的分组";
-"settings.defaultKnowledgeGroup" = "默认知识分组";
-"settings.defaultKnowledgeGroupDesc" = "知识库默认显示的分组";
 
 // MARK: - 设置 - 提醒
 "settings.enableReminder" = "启用智能提醒";
@@ -224,32 +221,6 @@
 "settings.selectExcludedApps" = "选择排除的应用";
 "settings.noManageableApps" = "未检测到可管理的应用";
 
-// MARK: - 设置 - AI
-"settings.aiMode" = "AI 模式";
-"settings.aiBackend" = "后端";
-"settings.aiBackendDesc" = "选择 AI 服务后端";
-"settings.aiProvider" = "AI 提供商";
-"settings.preset" = "预设";
-"settings.presetDesc" = "快速切换 AI 提供商";
-"settings.apiEndpoint" = "接口地址";
-"settings.apiEndpointDesc" = "OpenAI 兼容接口地址";
-"settings.model" = "模型";
-"settings.modelDesc" = "AI 模型名称";
-"settings.apiKey" = "API Key";
-"settings.apiKeyDesc" = "您的 API 密钥";
-"settings.systemPrompt" = "系统提示词";
-"settings.systemPromptDesc" = "定义 AI 的角色和行为";
-"settings.apiModeInstructions" = "API 模式基于 OpenAI 兼容接口，需要配置接口地址和 API Key。";
-"settings.opencodeConfig" = "opencode 配置";
-"settings.opencodeModelDesc" = "opencode 可用免费模型";
-"settings.refreshModels" = "刷新模型列表";
-"settings.acpService" = "ACP 服务";
-"settings.status" = "状态";
-"settings.statusDesc" = "ACP 后台服务连接状态";
-"settings.autoStart" = "自动启动";
-"settings.autoStartDesc" = "应用启动时自动启动 ACP 服务";
-"settings.opencodeModeInstructions" = "opencode 模式使用本地 opencode CLI 调用 AI，无需 API Key。请先安装 opencode 并配置好模型提供商。";
-
 // MARK: - 设置 - 数据备份
 "settings.dataBackup" = "数据备份";
 "settings.autoBackup" = "自动备份";
@@ -292,7 +263,6 @@
 "permission.later" = "稍后";
 
 // MARK: - 笔记列表
-"notes.copiedToKnowledge" = "✅ 已复制到知识库";
 "notes.doubleClickToTry" = "双击查看全部";
 "notes.viewInLargeWindow" = "在大窗口查看";
 "notes.copyContent" = "复制内容";
@@ -300,13 +270,10 @@
 "notes.moveToTop" = "移到最顶端";
 "notes.deleteNote" = "删除笔记";
 "notes.editInLargeWindow" = "在大窗口编辑/查看";
-"notes.fromKnowledgeBase" = "从知识库...";
 "notes.saved" = "已保存";
 "notes.manageGroups" = "管理分组";
 "notes.displayMode" = "显示模式";
 "notes.defaultNoteGroup" = "默认笔记分组";
-"notes.defaultKnowledgeGroup" = "默认知识分组";
-"notes.knowledgeBase" = "知识库";
 "notes.trash" = "回收站";
 "notes.emptyTrash" = "清空";
 "notes.confirmEmptyTrash" = "确认清空回收站？";
@@ -348,10 +315,6 @@
 "reminder.resting" = "休息中";
 "reminder.restCompleted" = "休息已结束";
 "reminder.startWork" = "开始工作";
-
-// MARK: - 大窗口
-"largeWindow.typeQuestion" = "输入问题开始对话";
-"largeWindow.placeholder" = "输入问题...";
 
 // MARK: - 插件设置
 "plugin.installedPlugins" = "已安装插件";
@@ -420,7 +383,6 @@
 "config.colorList" = "颜色列表";
 "config.executeHotkey" = "执行快捷键";
 "config.aiList" = "AI列表";
-"config.knowledgeList" = "知识列表";
 "config.plugin" = "插件";
 
 // MARK: - 备份频率

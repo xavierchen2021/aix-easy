@@ -16,7 +16,6 @@ struct FloatingButtonConfig: Codable {
     var customIcons: [Int: String] // 自定义图标：索引 -> SF Symbol 名称
     var groupDisplayMode: GroupDisplayMode // 分组显示模式
     var defaultNoteGroupId: UUID? // 默认笔记分组ID
-    var defaultKnowledgeGroupId: UUID? // 默认知识分组ID
     var boundWindows: [Int: BoundWindow] // 绑定的窗口信息：索引 -> 窗口信息
     var buttonCustomizations: [Int: ButtonCustomization] // 悬浮球个性化配置：索引 -> 个性化设置
     var noteOpacity: Double // 笔记透明度
@@ -39,27 +38,12 @@ struct FloatingButtonConfig: Codable {
     var buttonGroups: [ButtonGroup] // 悬浮球分组
     var userHiddenButtonIndices: [Int] // 用户主动隐藏的悬浮球索引集合
     var globalHiddenState: Bool // 未被用户隐藏的悬浮球是否处于全局隐藏状态
-    var aiUrl: String // AI 接口地址
-    var aiApiKey: String // AI API Key
-    var aiModel: String // AI 模型名称
-    var aiSystemPrompt: String // AI 系统提示词
-    var aiMode: AIMode // AI 模式：api 或 opencode
-    var opencodeModel: String // opencode 模型名称
-    var acpAutoStart: Bool // 应用启动时自动启动 ACP 服务
     var noteTheme: NoteTheme // 笔记外观主题
     var hiddenBrowsers: [String] // 隐藏的浏览器 bundleId 列表
     var browserOrder: [String] // 浏览器自定义排序 bundleId 列表
     var browserAutoClose: Bool // 选择浏览器后自动关闭窗口
     var browserAutoCloseDelay: Double // 自动关闭延迟秒数（0=立即, 3, 5, 8）
     var alwaysShowNoteActionButtons: Bool // 笔记项右侧按钮常驻显示（不隐藏）
-    
-    /// AI 模式枚举
-    enum AIMode: String, Codable, CaseIterable {
-        case api = "API"
-        case opencode = "opencode"
-
-        var localizedName: String { rawValue }
-    }
     
     /// TTS 引擎模式枚举
     enum TTSMode: String, Codable, CaseIterable {
@@ -79,7 +63,7 @@ struct FloatingButtonConfig: Codable {
          buttonActions: [Int: ButtonAction], buttonPluginIds: [Int: String], buttonHotkeys: [Int: String],
          clipboardHistoryLimit: Int, displayMode: DisplayMode,
          customIcons: [Int: String], groupDisplayMode: GroupDisplayMode,
-         defaultNoteGroupId: UUID?, defaultKnowledgeGroupId: UUID?,
+         defaultNoteGroupId: UUID?,
          boundWindows: [Int: BoundWindow], buttonCustomizations: [Int: ButtonCustomization],
          noteOpacity: Double, toolbarOpacity: Double, groupOpacity: Double, breathingEffectOpacity: Double,
          breathingSpeed: Double, enableBreathingEffect: Bool, clipboardSound: String, enableClipboardSound: Bool,
@@ -92,11 +76,6 @@ struct FloatingButtonConfig: Codable {
          edgeTtsChineseVoice: String = "zh-CN-XiaoxiaoNeural",
          buttonGroups: [ButtonGroup] = [],
          userHiddenButtonIndices: [Int] = [], globalHiddenState: Bool = false,
-         aiUrl: String = "https://api.openai.com/v1", aiApiKey: String = "",
-         aiModel: String = "gpt-4o-mini",
-         aiSystemPrompt: String = "你是一个知识问答助手，请用简洁清晰的中文回答问题。",
-         aiMode: AIMode = .api, opencodeModel: String = "opencode/kimi-k2.5-free",
-         acpAutoStart: Bool = false,
          noteTheme: NoteTheme = .gradient,
          hiddenBrowsers: [String] = [],
          browserOrder: [String] = [],
@@ -115,7 +94,6 @@ struct FloatingButtonConfig: Codable {
         self.customIcons = customIcons
         self.groupDisplayMode = groupDisplayMode
         self.defaultNoteGroupId = defaultNoteGroupId
-        self.defaultKnowledgeGroupId = defaultKnowledgeGroupId
         self.boundWindows = boundWindows
         self.buttonCustomizations = buttonCustomizations
         self.noteOpacity = noteOpacity
@@ -139,13 +117,6 @@ struct FloatingButtonConfig: Codable {
         self.buttonGroups = buttonGroups
         self.userHiddenButtonIndices = userHiddenButtonIndices
         self.globalHiddenState = globalHiddenState
-        self.aiUrl = aiUrl
-        self.aiApiKey = aiApiKey
-        self.aiModel = aiModel
-        self.aiSystemPrompt = aiSystemPrompt
-        self.aiMode = aiMode
-        self.opencodeModel = opencodeModel
-        self.acpAutoStart = acpAutoStart
         self.noteTheme = noteTheme
         self.hiddenBrowsers = hiddenBrowsers
         self.browserOrder = browserOrder
@@ -170,7 +141,6 @@ struct FloatingButtonConfig: Codable {
         
         // 处理可能的新增字段，如果不存在则使用默认值
         defaultNoteGroupId = try container.decodeIfPresent(UUID.self, forKey: .defaultNoteGroupId) ?? NoteGroup.defaultId
-        defaultKnowledgeGroupId = try container.decodeIfPresent(UUID.self, forKey: .defaultKnowledgeGroupId) ?? NoteGroup.defaultKnowledgeId
         
         boundWindows = try container.decodeIfPresent([Int: BoundWindow].self, forKey: .boundWindows) ?? [:]
         buttonCustomizations = try container.decodeIfPresent([Int: ButtonCustomization].self, forKey: .buttonCustomizations) ?? [:]
@@ -209,15 +179,6 @@ struct FloatingButtonConfig: Codable {
         
         // 处理全局隐藏状态新增字段
         globalHiddenState = try container.decodeIfPresent(Bool.self, forKey: .globalHiddenState) ?? false
-        
-        // 处理 AI 相关新增字段
-        aiUrl = try container.decodeIfPresent(String.self, forKey: .aiUrl) ?? "https://api.openai.com/v1"
-        aiApiKey = try container.decodeIfPresent(String.self, forKey: .aiApiKey) ?? ""
-        aiModel = try container.decodeIfPresent(String.self, forKey: .aiModel) ?? "gpt-4o-mini"
-        aiSystemPrompt = try container.decodeIfPresent(String.self, forKey: .aiSystemPrompt) ?? "你是一个知识问答助手，请用简洁清晰的中文回答问题。"
-        aiMode = try container.decodeIfPresent(AIMode.self, forKey: .aiMode) ?? .api
-        opencodeModel = try container.decodeIfPresent(String.self, forKey: .opencodeModel) ?? "opencode/kimi-k2.5-free"
-        acpAutoStart = try container.decodeIfPresent(Bool.self, forKey: .acpAutoStart) ?? false
         
         noteTheme = try container.decodeIfPresent(NoteTheme.self, forKey: .noteTheme) ?? .gradient
         
@@ -364,7 +325,6 @@ struct FloatingButtonConfig: Codable {
         case showReminder = "提醒休息"
         case colorList = "颜色列表"
         case executeHotkey = "执行快捷键"
-        case showKnowledgeList = "知识列表"
         case plugin = "插件"
 
         var localizedName: String {
@@ -378,7 +338,6 @@ struct FloatingButtonConfig: Codable {
             case .showReminder: return L10n.tr("config.breakReminder")
             case .colorList: return L10n.tr("config.colorList")
             case .executeHotkey: return L10n.tr("config.executeHotkey")
-            case .showKnowledgeList: return L10n.tr("config.knowledgeList")
             case .plugin: return L10n.tr("config.plugin")
             }
         }
@@ -393,7 +352,6 @@ struct FloatingButtonConfig: Codable {
             case .showReminder: return "bell.fill"
             case .colorList: return "eyedropper"
             case .executeHotkey: return "keyboard"
-            case .showKnowledgeList: return "books.vertical.fill"
             case .none: return nil
             case .plugin: return "puzzlepiece.extension"
             }
@@ -504,7 +462,6 @@ struct FloatingButtonConfig: Codable {
         customIcons: [:],
         groupDisplayMode: .both,
         defaultNoteGroupId: NoteGroup.defaultId,
-        defaultKnowledgeGroupId: NoteGroup.defaultKnowledgeId,
         boundWindows: [:],
         buttonCustomizations: [
             0: ButtonCustomization(colorScheme: .sunsetOrange),
@@ -523,12 +480,6 @@ struct FloatingButtonConfig: Codable {
         toggleAIXHotkey: "Cmd+Shift+A",
         colorPickerHotkey: "Cmd+Shift+P",
         buttonGroups: [],
-        aiUrl: "https://api.openai.com/v1",
-        aiApiKey: "",
-        aiModel: "gpt-4o-mini",
-        aiSystemPrompt: "你是一个知识问答助手，请用简洁清晰的中文回答问题。",
-        aiMode: .api,
-        opencodeModel: "opencode/kimi-k2.5-free",
         noteTheme: .gradient,
         hiddenBrowsers: [],
         browserOrder: [],
@@ -663,12 +614,6 @@ class FloatingButtonConfigManager: ObservableObject {
     
     func updateDefaultNoteGroupId(_ groupId: UUID?) {
         config.defaultNoteGroupId = groupId
-        save()
-        NotificationCenter.default.post(name: Notification.Name("floatingButtonConfigChanged"), object: nil)
-    }
-    
-    func updateDefaultKnowledgeGroupId(_ groupId: UUID?) {
-        config.defaultKnowledgeGroupId = groupId
         save()
         NotificationCenter.default.post(name: Notification.Name("floatingButtonConfigChanged"), object: nil)
     }
@@ -1012,50 +957,6 @@ class FloatingButtonConfigManager: ObservableObject {
     /// 获取全局隐藏状态
     func getGlobalHiddenState() -> Bool {
         return config.globalHiddenState
-    }
-
-    // MARK: - AI 配置管理
-
-    /// 更新 AI 接口地址
-    func updateAiUrl(_ url: String) {
-        config.aiUrl = url
-        save()
-    }
-
-    /// 更新 AI API Key
-    func updateAiApiKey(_ key: String) {
-        config.aiApiKey = key
-        save()
-    }
-
-    /// 更新 AI 模型名称
-    func updateAiModel(_ model: String) {
-        config.aiModel = model
-        save()
-    }
-    
-    /// 更新 AI 系统提示词
-    func updateAiSystemPrompt(_ prompt: String) {
-        config.aiSystemPrompt = prompt
-        save()
-    }
-    
-    /// 更新 AI 模式
-    func updateAiMode(_ mode: FloatingButtonConfig.AIMode) {
-        config.aiMode = mode
-        save()
-    }
-    
-    /// 更新 opencode 模型名称
-    func updateOpencodeModel(_ model: String) {
-        config.opencodeModel = model
-        save()
-    }
-    
-    /// 更新 ACP 自动启动设置
-    func updateAcpAutoStart(_ enabled: Bool) {
-        config.acpAutoStart = enabled
-        save()
     }
     
     /// 更新隐藏的浏览器列表

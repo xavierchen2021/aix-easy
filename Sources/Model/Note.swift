@@ -5,23 +5,21 @@ struct NoteGroup: Identifiable, Codable, Equatable {
     let id: UUID
     var name: String
     var icon: String
-    var isKnowledgeGroup: Bool // 是否为知识库分组
     var sortOrder: Int // 排序索引
     var isLocked: Bool // 是否锁定（需全局密码解锁）
     var isActivityGroup: Bool // 是否为日常活动分组
     
-    init(id: UUID = UUID(), name: String, icon: String = "folder", isKnowledgeGroup: Bool = false, sortOrder: Int = 0, isLocked: Bool = false, isActivityGroup: Bool = false) {
+    init(id: UUID = UUID(), name: String, icon: String = "folder", sortOrder: Int = 0, isLocked: Bool = false, isActivityGroup: Bool = false) {
         self.id = id
         self.name = name
         self.icon = icon
-        self.isKnowledgeGroup = isKnowledgeGroup
         self.sortOrder = sortOrder
         self.isLocked = isLocked
         self.isActivityGroup = isActivityGroup
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, icon, isKnowledgeGroup, sortOrder, isLocked, isActivityGroup
+        case id, name, icon, sortOrder, isLocked, isActivityGroup
     }
     
     init(from decoder: Decoder) throws {
@@ -29,7 +27,6 @@ struct NoteGroup: Identifiable, Codable, Equatable {
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         icon = try container.decode(String.self, forKey: .icon)
-        isKnowledgeGroup = try container.decode(Bool.self, forKey: .isKnowledgeGroup)
         sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
         isLocked = try container.decodeIfPresent(Bool.self, forKey: .isLocked) ?? false
         isActivityGroup = try container.decodeIfPresent(Bool.self, forKey: .isActivityGroup) ?? false
@@ -37,17 +34,14 @@ struct NoteGroup: Identifiable, Codable, Equatable {
     
     /// 是否为预设分组（不可锁定）
     var isPresetGroup: Bool {
-        id == NoteGroup.defaultId || id == NoteGroup.defaultKnowledgeId || id == NoteGroup.colorGroupId
+        id == NoteGroup.defaultId || id == NoteGroup.colorGroupId
     }
     
     static let defaultId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
-    static let defaultGroup = NoteGroup(id: defaultId, name: "闪念", icon: "tray", isKnowledgeGroup: false, sortOrder: 0)
-    
-    static let defaultKnowledgeId = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
-    static let defaultKnowledgeGroup = NoteGroup(id: defaultKnowledgeId, name: "智库", icon: "book.closed", isKnowledgeGroup: true, sortOrder: 0)
+    static let defaultGroup = NoteGroup(id: defaultId, name: "闪念", icon: "tray", sortOrder: 0)
     
     static let colorGroupId = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
-    static let colorGroup = NoteGroup(id: colorGroupId, name: "颜色列表", icon: "eyedropper", isKnowledgeGroup: false, sortOrder: 99)
+    static let colorGroup = NoteGroup(id: colorGroupId, name: "颜色列表", icon: "eyedropper", sortOrder: 99)
 }
 
 struct Note: Identifiable, Codable, Equatable {
@@ -57,13 +51,9 @@ struct Note: Identifiable, Codable, Equatable {
     var createdAt: Date
     var colorHex: String // 笔记颜色，强制非可选
     var groupId: UUID // 所属分组 ID
-    var isKnowledge: Bool // 是否为知识
     var isDeleted: Bool // 是否已删除（回收站）
     var deletedAt: Date? // 删除时间
-    var isAI: Bool // 是否为AI问答笔记
-    var aiSessionId: String? // AI会话ID
     var pinnedAt: Date? // 置顶时间，非空则置顶
-    var isMemory: Bool // 是否标记为记忆条目来源
     var isInProgress: Bool // 是否标记为进行中任务
     var modifiedAt: Date? // 最后修改时间
     var completedAt: Date? // 完成时间
@@ -98,20 +88,16 @@ struct Note: Identifiable, Codable, Equatable {
         return result.isEmpty ? nil : result.joined(separator: ",")
     }
 
-    init(id: UUID = UUID(), content: String, isCompleted: Bool = false, createdAt: Date = Date(), colorHex: String? = nil, groupId: UUID = NoteGroup.defaultId, isKnowledge: Bool = false, isDeleted: Bool = false, deletedAt: Date? = nil, isAI: Bool = false, aiSessionId: String? = nil, pinnedAt: Date? = nil, isMemory: Bool = false, isInProgress: Bool = false, modifiedAt: Date? = nil, completedAt: Date? = nil, tag: String? = nil) {
+    init(id: UUID = UUID(), content: String, isCompleted: Bool = false, createdAt: Date = Date(), colorHex: String? = nil, groupId: UUID = NoteGroup.defaultId, isDeleted: Bool = false, deletedAt: Date? = nil, pinnedAt: Date? = nil, isInProgress: Bool = false, modifiedAt: Date? = nil, completedAt: Date? = nil, tag: String? = nil) {
         self.id = id
         self.content = content
         self.isCompleted = isCompleted
         self.createdAt = createdAt
         self.colorHex = colorHex ?? Note.randomColorHex()
         self.groupId = groupId
-        self.isKnowledge = isKnowledge
         self.isDeleted = isDeleted
         self.deletedAt = deletedAt
-        self.isAI = isAI
-        self.aiSessionId = aiSessionId
         self.pinnedAt = pinnedAt
-        self.isMemory = isMemory
         self.isInProgress = isInProgress
         self.modifiedAt = modifiedAt
         self.completedAt = completedAt
@@ -119,7 +105,7 @@ struct Note: Identifiable, Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, content, isCompleted, createdAt, colorHex, groupId, isKnowledge, isDeleted, deletedAt, isAI, aiSessionId, pinnedAt, isMemory, isInProgress, modifiedAt, completedAt, tag
+        case id, content, isCompleted, createdAt, colorHex, groupId, isDeleted, deletedAt, pinnedAt, isInProgress, modifiedAt, completedAt, tag
     }
 
     init(from decoder: Decoder) throws {
@@ -130,13 +116,9 @@ struct Note: Identifiable, Codable, Equatable {
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex) ?? Note.randomColorHex()
         groupId = try container.decodeIfPresent(UUID.self, forKey: .groupId) ?? NoteGroup.defaultId
-        isKnowledge = try container.decodeIfPresent(Bool.self, forKey: .isKnowledge) ?? false
         isDeleted = try container.decodeIfPresent(Bool.self, forKey: .isDeleted) ?? false
         deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
-        isAI = try container.decodeIfPresent(Bool.self, forKey: .isAI) ?? false
-        aiSessionId = try container.decodeIfPresent(String.self, forKey: .aiSessionId)
         pinnedAt = try container.decodeIfPresent(Date.self, forKey: .pinnedAt)
-        isMemory = try container.decodeIfPresent(Bool.self, forKey: .isMemory) ?? false
         isInProgress = try container.decodeIfPresent(Bool.self, forKey: .isInProgress) ?? false
         modifiedAt = try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
         completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
@@ -201,7 +183,6 @@ class NoteManager: ObservableObject {
         if existingGroups.isEmpty {
              // Load default groups if no data
             try? store.insertGroup(NoteGroup.defaultGroup)
-            try? store.insertGroup(NoteGroup.defaultKnowledgeGroup)
             
             // Add initial notes? Maybe not if we want clean slate, but let's keep welcome notes if truly empty.
             if store.getAllNotes().isEmpty {
@@ -216,9 +197,6 @@ class NoteManager: ObservableObject {
                 if group.id == NoteGroup.defaultId && group.name != "闪念" {
                     try? store.updateGroupName(id: group.id, newName: "闪念")
                 }
-                if group.id == NoteGroup.defaultKnowledgeId && group.name != "智库" {
-                    try? store.updateGroupName(id: group.id, newName: "智库")
-                }
             }
         }
     }
@@ -227,12 +205,17 @@ class NoteManager: ObservableObject {
         self.groups = store.getAllGroups()
         self.notes = store.getAllNotes()
         
-        // Ensure defaults exist and update their names
-        if !self.groups.contains(where: { $0.id == NoteGroup.defaultKnowledgeId }) {
-             self.groups.append(NoteGroup.defaultKnowledgeGroup)
-             try? store.insertGroup(NoteGroup.defaultKnowledgeGroup)
-        } else if let index = self.groups.firstIndex(where: { $0.id == NoteGroup.defaultKnowledgeId }) {
-            self.groups[index].name = "智库"
+        // 兼容迁移：如果存在历史的默认知识库分组，将其下的笔记归并到默认分组，并移除该旧分组
+        let oldKnowledgeId = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+        if self.groups.contains(where: { $0.id == oldKnowledgeId }) {
+            for i in 0..<self.notes.count {
+                if self.notes[i].groupId == oldKnowledgeId {
+                    self.notes[i].groupId = NoteGroup.defaultId
+                    try? store.insertNote(self.notes[i])
+                }
+            }
+            try? store.deleteGroup(id: oldKnowledgeId)
+            self.groups.removeAll { $0.id == oldKnowledgeId }
         }
         
         if !self.groups.contains(where: { $0.id == NoteGroup.defaultId }) {
@@ -258,16 +241,9 @@ class NoteManager: ObservableObject {
     }
 
     /// 获取指定分组及视图上下文下最近排在前面的颜色（默认最多4项，用于排重确保任意相邻5项互不重色）
-    func getRecentColors(groupId: UUID, isKnowledge: Bool = false, isAI: Bool = false, limit: Int = 4) -> [String] {
+    func getRecentColors(groupId: UUID, limit: Int = 4) -> [String] {
         let relevantNotes = notes.filter { note in
-            guard !note.isDeleted else { return false }
-            if isAI {
-                return note.isAI
-            }
-            if isKnowledge {
-                return note.isKnowledge && !note.isAI && note.groupId == groupId
-            }
-            return !note.isKnowledge && !note.isAI && note.groupId == groupId
+            !note.isDeleted && note.groupId == groupId
         }
         return Array(relevantNotes.prefix(limit).map { $0.colorHex })
     }
@@ -294,23 +270,11 @@ class NoteManager: ObservableObject {
         return newNote.id
     }
 
-    @discardableResult
-    func addNewAINote(groupId: UUID = NoteGroup.defaultId) -> UUID {
-        let excludingColors = getRecentColors(groupId: groupId, isAI: true, limit: 4)
-        let colorHex = Note.randomColorHex(excluding: excludingColors)
-        let newNote = Note(content: "", colorHex: colorHex, groupId: groupId, isAI: true, aiSessionId: nil)
-        
-        notes.insert(newNote, at: 0)
-        try? store.insertNote(newNote)
-        
-        return newNote.id
-    }
-
-    func addGroup(name: String, icon: String = "folder", isKnowledge: Bool = false) {
-        let currentGroups = groups.filter { $0.isKnowledgeGroup == isKnowledge && $0.id != NoteGroup.colorGroupId }
+    func addGroup(name: String, icon: String = "folder") {
+        let currentGroups = groups.filter { $0.id != NoteGroup.colorGroupId }
         guard currentGroups.count < 6 else { return }
         let maxOrder = currentGroups.map { $0.sortOrder }.max() ?? -1
-        let newGroup = NoteGroup(name: name, icon: icon, isKnowledgeGroup: isKnowledge, sortOrder: maxOrder + 1)
+        let newGroup = NoteGroup(name: name, icon: icon, sortOrder: maxOrder + 1)
         
         groups.append(newGroup)
         try? store.insertGroup(newGroup)
@@ -318,7 +282,7 @@ class NoteManager: ObservableObject {
     
     /// 添加完整的 NoteGroup 对象
     func addGroup(_ group: NoteGroup) {
-        let currentGroups = groups.filter { $0.isKnowledgeGroup == group.isKnowledgeGroup && $0.id != NoteGroup.colorGroupId }
+        let currentGroups = groups.filter { $0.id != NoteGroup.colorGroupId }
         guard currentGroups.count < 6 else { return }
         groups.append(group)
         try? store.insertGroup(group)
@@ -346,9 +310,9 @@ class NoteManager: ObservableObject {
     }
 
     func deleteGroup(id: UUID) {
-        guard id != NoteGroup.defaultId && id != NoteGroup.defaultKnowledgeId else { return }
-        if let group = groups.first(where: { $0.id == id }) {
-            let fallbackId = group.isKnowledgeGroup ? NoteGroup.defaultKnowledgeId : NoteGroup.defaultId
+        guard id != NoteGroup.defaultId else { return }
+        if let _ = groups.first(where: { $0.id == id }) {
+            let fallbackId = NoteGroup.defaultId
             
             // Remove group from DB
             try? store.deleteGroup(id: id)
@@ -519,9 +483,8 @@ class NoteManager: ObservableObject {
         return group.isLocked && !isSessionUnlocked
     }
     
-    func moveGroup(from source: IndexSet, to destination: Int, isKnowledgeGroup: Bool) {
-        // 只对同类型的分组进行排序
-        var sortedGroups = groups.filter { $0.isKnowledgeGroup == isKnowledgeGroup }
+    func moveGroup(from source: IndexSet, to destination: Int) {
+        var sortedGroups = groups.filter { $0.id != NoteGroup.colorGroupId }
                                  .sorted { $0.sortOrder < $1.sortOrder }
         
         // 执行移动
@@ -551,28 +514,14 @@ class NoteManager: ObservableObject {
         }
     }
     
-    func getSortedGroups(isKnowledgeGroup: Bool) -> [NoteGroup] {
-        return groups.filter { $0.isKnowledgeGroup == isKnowledgeGroup && $0.id != NoteGroup.colorGroupId }
+    func getSortedGroups() -> [NoteGroup] {
+        return groups.filter { $0.id != NoteGroup.colorGroupId }
                     .sorted { $0.sortOrder < $1.sortOrder }
     }
 
     func moveNote(id: UUID, toGroupId: UUID) {
         if let index = notes.firstIndex(where: { $0.id == id }) {
             notes[index].groupId = toGroupId
-            if let targetGroup = groups.first(where: { $0.id == toGroupId }) {
-                let wasKnowledge = notes[index].isKnowledge
-                notes[index].isKnowledge = targetGroup.isKnowledgeGroup
-                if wasKnowledge && !targetGroup.isKnowledgeGroup {
-                    if notes[index].isMemory {
-                        notes[index].isMemory = false
-                        MemoryManager.shared.unmarkKnowledgeMemory(noteId: notes[index].id)
-                    }
-                } else if !wasKnowledge && targetGroup.isKnowledgeGroup {
-                    if notes[index].isMemory {
-                        MemoryManager.shared.markKnowledgeAsMemory(note: notes[index])
-                    }
-                }
-            }
             saveNotes()
             try? store.insertNote(notes[index])
         }
@@ -634,9 +583,6 @@ class NoteManager: ObservableObject {
             updatedNote.modifiedAt = Date()
             notes[index] = updatedNote
             try? store.insertNote(updatedNote)
-
-            let inProgressNotes = notes.filter { $0.isInProgress && !$0.isDeleted }
-            MemoryManager.shared.nonIntrusivePrompt(for: inProgressNotes)
         }
     }
 
@@ -681,98 +627,11 @@ class NoteManager: ObservableObject {
         }
     }
 
-    func saveAsKnowledge(id: UUID, toGroupId: UUID) {
-        if let index = notes.firstIndex(where: { $0.id == id }) {
-            notes[index].isKnowledge = true
-            notes[index].groupId = toGroupId
-            saveNotes()
-            if notes[index].isMemory {
-                MemoryManager.shared.markKnowledgeAsMemory(note: notes[index])
-            }
-        }
-    }
-
-    /// 复制笔记内容到知识库分组（创建新笔记副本）
-    func copyToKnowledge(content: String, toGroupId: UUID) {
-        let excludingColors = getRecentColors(groupId: toGroupId, isKnowledge: true, limit: 4)
-        let newNote = Note(content: content, colorHex: Note.randomColorHex(excluding: excludingColors), groupId: toGroupId, isKnowledge: true)
-        notes.insert(newNote, at: 0)
-        try? store.insertNote(newNote)
-    }
-
-    func addKnowledgeNote(content: String, groupId: UUID) -> Note {
-        let excludingColors = getRecentColors(groupId: groupId, isKnowledge: true, limit: 4)
-        let newNote = Note(content: content, colorHex: Note.randomColorHex(excluding: excludingColors), groupId: groupId, isKnowledge: true)
-        notes.insert(newNote, at: 0)
-        try? store.insertNote(newNote)
-        return newNote
-    }
-
-    func getOrCreateKnowledgeGroup(named name: String) -> UUID {
-        if let existing = groups.first(where: { $0.isKnowledgeGroup && $0.name == name }) {
-            return existing.id
-        }
-
-        let sorted = getSortedGroups(isKnowledgeGroup: true)
-        let maxOrder = sorted.map { $0.sortOrder }.max() ?? 0
-        let group = NoteGroup(name: name, icon: "text.book.closed", isKnowledgeGroup: true, sortOrder: maxOrder + 1)
-        groups.append(group)
-        try? store.insertGroup(group)
-        return group.id
-    }
-
-    func toggleKnowledge(id: UUID) {
-        if let index = notes.firstIndex(where: { $0.id == id }) {
-            notes[index].isKnowledge.toggle()
-            // 如果变为知识，且当前分组不是知识分组，则移动到默认知识分组
-            if notes[index].isKnowledge {
-                let currentGroup = groups.first { $0.id == notes[index].groupId }
-                if currentGroup?.isKnowledgeGroup != true {
-                    notes[index].groupId = NoteGroup.defaultKnowledgeId
-                }
-            } else {
-                // 如果从知识库移除，且当前分组是知识分组，则移动到默认笔记分组
-                let currentGroup = groups.first { $0.id == notes[index].groupId }
-                if currentGroup?.isKnowledgeGroup == true {
-                    notes[index].groupId = NoteGroup.defaultId
-                }
-            }
-            saveNotes()
-
-            if notes[index].isKnowledge {
-                if notes[index].isMemory {
-                    MemoryManager.shared.markKnowledgeAsMemory(note: notes[index])
-                }
-            } else {
-                notes[index].isMemory = false
-                MemoryManager.shared.unmarkKnowledgeMemory(noteId: notes[index].id)
-                saveNotes()
-            }
-        }
-    }
-
-    func toggleMemoryMark(id: UUID) {
-        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
-        guard notes[index].isKnowledge else { return }
-
-        notes[index].isMemory.toggle()
-        try? store.insertNote(notes[index])
-
-        if notes[index].isMemory {
-            MemoryManager.shared.markKnowledgeAsMemory(note: notes[index])
-        } else {
-            MemoryManager.shared.unmarkKnowledgeMemory(noteId: notes[index].id)
-        }
-    }
-
     func toggleInProgressMark(id: UUID) {
         guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
 
         notes[index].isInProgress.toggle()
         try? store.insertNote(notes[index])
-
-        let inProgressNotes = notes.filter { $0.isInProgress && !$0.isDeleted }
-        MemoryManager.shared.nonIntrusivePrompt(for: inProgressNotes)
     }
 
     /// 置顶笔记（移到最顶端）

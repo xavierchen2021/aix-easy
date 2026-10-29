@@ -226,324 +226,7 @@ struct CustomTextEditor: NSViewRepresentable {
     }
 }
 
-// MARK: - AI 笔记项视图（聊天式交互）
-struct AINoteItemView: View {
-    var note: Note
-    var onDelete: () -> Void
-    var onColorFilterClick: ((String) -> Void)? = nil
-    
-    @State private var inputText: String = ""
-    @State private var inputHeight: CGFloat = 20
-    @State private var isHovered = false
-    @State private var isStreaming = false
-    @State private var showCopiedToKnowledgeToast = false
-    @FocusState private var isInputFocused: Bool
-    @StateObject private var configManager = FloatingButtonConfigManager.shared
-    @StateObject private var noteManager = NoteManager.shared
-    
-    /// 从 NoteManager 获取实时笔记内容
-    private var currentNote: Note {
-        noteManager.notes.first(where: { $0.id == note.id }) ?? note
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            inputBarView
-            conversationContentView
-        }
-        .highPriorityGesture(TapGesture(count: 2).onEnded {
-            LargeNoteWindow.show(note: currentNote)
-        })
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(noteBackground)
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-        .onHover { hovering in
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                isHovered = hovering
-            }
 
-        }
-        .onAppear {
-            // 新建 AI 笔记自动聚焦输入框
-            if note.content.isEmpty {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    isInputFocused = true
-                }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
-            // 应用失焦时，如果内容为空则删除
-            if currentNote.content.isEmpty && inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                NoteManager.shared.permanentDeleteEmpty(id: note.id)
-            }
-        }
-        .onTapGesture {
-            // 阻止点击事件向上传播
-        }
-        .overlay(alignment: .center) {
-            if showCopiedToKnowledgeToast {
-                Text(L10n.tr("notes.copiedToKnowledge"))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.black.opacity(0.75))
-                    .cornerRadius(8)
-                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
-                    .transition(.opacity)
-            }
-        }
-    }
-    
-    // MARK: - 输入栏子视图
-    private var inputBarView: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "brain.head.profile")
-                .foregroundColor(.white)
-                .font(.system(size: 16))
-            
-            CustomTextEditor(text: $inputText, height: $inputHeight, onSubmit: sendMessage, shouldBecomeFirstResponder: isInputFocused)
-                .focused($isInputFocused)
-                .frame(width: 160, height: min(inputHeight, 80), alignment: .leading)
-            
-            // 右侧按钮组 - 始终显示
-            actionButtonsView
-        }
-    }
-    
-    // MARK: - 操作按钮子视图
-    private var actionButtonsView: some View {
-        HStack(spacing: 6) {
-            if isStreaming {
-                ProgressView()
-                    .scaleEffect(0.6)
-                    .frame(width: 16, height: 16)
-                    .tint(.white)
-            } else {
-                Button(action: sendMessage) {
-                    Image(systemName: "paperplane.fill")
-                        .foregroundColor(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .white.opacity(0.3) : .white.opacity(0.8))
-                }
-                .buttonStyle(.plain)
-                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            
-            if !currentNote.content.isEmpty {
-                Button(action: {
-                    copyNoteToClipboard(currentNote.content)
-                }) {
-                    Image(systemName: "doc.on.doc")
-                        .foregroundColor(.white.opacity(0.8))
-                }
-                .buttonStyle(.plain)
-            }
-            
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .foregroundColor(.white.opacity(0.8))
-            }
-            .buttonStyle(.plain)
-        }
-    }
-    
-    // MARK: - 对话内容子视图
-    @ViewBuilder
-    private var conversationContentView: some View {
-        if !currentNote.content.isEmpty {
-            let displayText = currentNote.content.count > 300
-                ? String(currentNote.content.suffix(300))
-                : currentNote.content
-            ScrollViewReader { scrollProxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    Text(displayText)
-                        .foregroundColor(.white)
-                        .font(.system(size: 13))
-                        .frame(width: 260, alignment: .leading)
-                        .id("aiContentBottom")
-                }
-                .frame(minWidth: 260, maxWidth: 260, maxHeight: 300, alignment: .leading)
-                .padding(.top, 4)
-                .onChange(of: currentNote.content) {
-                    scrollProxy.scrollTo("aiContentBottom", anchor: .bottom)
-                }
-                .onAppear {
-                    scrollProxy.scrollTo("aiContentBottom", anchor: .bottom)
-                }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                if isHovered && !currentNote.content.isEmpty {
-                    Text(L10n.tr("notes.doubleClickToTry"))
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.purple.opacity(0.8))
-                        .cornerRadius(4)
-                        .padding(6)
-                        .transition(.opacity)
-                }
-            }
-            .contextMenu {
-                Button(L10n.tr("notes.viewInLargeWindow")) {
-                    LargeNoteWindow.show(note: currentNote)
-                }
-                Button(L10n.tr("notes.copyContent")) {
-                    copyNoteToClipboard(currentNote.content)
-                }
-                Menu("复制到知识库") {
-                    ForEach(NoteManager.shared.getSortedGroups(isKnowledgeGroup: true)) { group in
-                        Button(group.name) {
-                            NoteManager.shared.copyToKnowledge(content: currentNote.content, toGroupId: group.id)
-                            showCopiedToKnowledgeToast = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                showCopiedToKnowledgeToast = false
-                            }
-                        }
-                    }
-                }
-                
-                Menu("设置颜色") {
-                    ForEach(Note.colorPalette) { item in
-                        Button(action: {
-                            NoteManager.shared.updateNoteColor(id: currentNote.id, colorHex: item.hex)
-                        }) {
-                            if currentNote.colorHex.uppercased() == item.hex.uppercased() {
-                                Text("✓ \(item.name)")
-                            } else {
-                                Text(item.name)
-                            }
-                        }
-                    }
-                }
-                
-                Button("按此颜色过滤") {
-                    onColorFilterClick?(currentNote.colorHex)
-                }
-                
-                Divider()
-                if currentNote.pinnedAt != nil {
-                    Button(L10n.tr("notes.unpin")) {
-                        NoteManager.shared.unpinNote(id: currentNote.id)
-                    }
-                } else {
-                    Button(L10n.tr("notes.moveToTop")) {
-                        NoteManager.shared.moveToTop(id: currentNote.id)
-                    }
-                }
-                Divider()
-                Button(L10n.tr("notes.deleteNote"), role: .destructive) {
-                    onDelete()
-                }
-            }
-        }
-    }
-    
-    // MARK: - 背景子视图
-    private var noteBackground: some View {
-        Group {
-            if configManager.config.noteTheme == .gradient {
-                let baseColor = Color(hex: currentNote.colorHex)
-                let opacity = configManager.config.noteOpacity
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(baseColor.opacity(opacity))
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(stops: [
-                                    .init(color: .white.opacity(0.6), location: 0),
-                                    .init(color: .white.opacity(0.1), location: 0.15),
-                                    .init(color: .clear, location: 0.5),
-                                    .init(color: .black.opacity(0.1), location: 0.8),
-                                    .init(color: .black.opacity(0.3), location: 1.0)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                }
-            } else {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: currentNote.colorHex).opacity(configManager.config.noteOpacity))
-            }
-        }
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white.opacity(0.5), lineWidth: 2)
-        )
-    }
-    
-    /// 发送消息
-    private func sendMessage() {
-        let question = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !question.isEmpty else { return }
-        let preferredSessionId = currentNote.aiSessionId ?? ""
-        
-        isStreaming = true
-        let noteId = note.id
-        
-        // 构建内容：在现有内容后追加问答（使用 currentNote 获取实时内容）
-        var newContent = currentNote.content
-        if !newContent.isEmpty {
-            newContent += "\n\n"
-        }
-        newContent += "我：\(question)\n\n"
-        
-        // 清空输入框
-        inputText = ""
-        
-        // 更新笔记内容
-        var updatedNote = currentNote
-        updatedNote.content = newContent
-        NoteManager.shared.updateNote(updatedNote)
-        
-        AIService.shared.sendQuestion(
-            noteContent: newContent,
-            sessionId: preferredSessionId,
-            onSessionReady: { resolvedSessionId in
-                Task { @MainActor in
-                    if var latestNote = NoteManager.shared.notes.first(where: { $0.id == noteId }), latestNote.aiSessionId != resolvedSessionId {
-                        latestNote.aiSessionId = resolvedSessionId
-                        NoteManager.shared.updateNote(latestNote)
-                    }
-                }
-            },
-            onChunk: { chunk in
-                Task { @MainActor in
-                    newContent += chunk
-                    if var latestNote = NoteManager.shared.notes.first(where: { $0.id == noteId }) {
-                        latestNote.content = newContent
-                        NoteManager.shared.updateNote(latestNote)
-                    }
-                }
-            },
-            onComplete: {
-                Task { @MainActor in
-                    isStreaming = false
-                    NotificationCenter.default.post(name: Notification.Name("NoteViewModeChanged"), object: nil)
-                }
-            },
-            onError: { error in
-                Task { @MainActor in
-                    newContent += "\n[错误: \(error)]"
-                    if var latestNote = NoteManager.shared.notes.first(where: { $0.id == noteId }) {
-                        latestNote.content = newContent
-                        NoteManager.shared.updateNote(latestNote)
-                    }
-                    isStreaming = false
-                }
-            }
-        )
-    }
-    
-    private func copyNoteToClipboard(_ text: String) {
-        if let data = text.data(using: .utf8) {
-            let clipboardItem = ClipboardItem(id: UUID(), timestamp: Date(), type: .text, data: data)
-            ClipboardManager.shared.copyToClipboard(clipboardItem, shouldAddToHistory: true)
-        }
-    }
-}
 
 struct NoteItemView: View {
     var note: Note
@@ -589,14 +272,12 @@ struct NoteItemView: View {
     var body: some View {
         HStack(spacing: 12) {
             // 复选框
-            if !note.isKnowledge {
-                Button(action: onToggle) {
-                    Image(systemName: note.isCompleted ? "checkmark.square.fill" : "square")
-                        .foregroundColor(.white)
-                        .font(.system(size: 16))
-                }
-                .buttonStyle(.plain)
+            Button(action: onToggle) {
+                Image(systemName: note.isCompleted ? "checkmark.square.fill" : "square")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16))
             }
+            .buttonStyle(.plain)
             
             // 内容与标签展示区
             VStack(alignment: .leading, spacing: 6) {
@@ -616,7 +297,7 @@ struct NoteItemView: View {
                         }
                 } else {
                     Text(note.content.isEmpty ? "新笔记..." : note.content)
-                        .strikethrough(!note.isKnowledge && note.isCompleted)
+                        .strikethrough(note.isCompleted)
                         .foregroundColor(.white)
                         .lineLimit(5)
                         .frame(width: 220, alignment: .leading)
@@ -625,16 +306,8 @@ struct NoteItemView: View {
                 // 徽章与标签栏（无论是只读还是编辑状态，只要有标签或状态标记均始终显示）
                 let noteTags = note.tags
                 let hasTags = !noteTags.isEmpty
-                if note.isMemory || note.isInProgress || hasTags {
+                if note.isInProgress || hasTags {
                     HStack(spacing: 6) {
-                        if note.isMemory {
-                            Label("记忆", systemImage: "brain")
-                                .font(.system(size: 10, weight: .medium))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.blue.opacity(0.25)))
-                                .foregroundColor(.white)
-                        }
                         if note.isInProgress {
                             Label("进行中", systemImage: "bolt.fill")
                                 .font(.system(size: 10, weight: .medium))
@@ -681,14 +354,12 @@ struct NoteItemView: View {
                             LargeNoteWindow.show(note: note)
                         }
                         
-                        if !note.isKnowledge {
-                            Button(note.isCompleted ? "标记为未完成" : "标记为已完成") {
-                                onToggle()
-                            }
-                            
-                            Button(note.isInProgress ? "取消进行中" : "标记为进行中") {
-                                NoteManager.shared.toggleInProgressMark(id: note.id)
-                            }
+                        Button(note.isCompleted ? "标记为未完成" : "标记为已完成") {
+                            onToggle()
+                        }
+                        
+                        Button(note.isInProgress ? "取消进行中" : "标记为进行中") {
+                            NoteManager.shared.toggleInProgressMark(id: note.id)
                         }
                         
                         Button(L10n.tr("notes.copyContent")) {
@@ -726,29 +397,11 @@ struct NoteItemView: View {
                         }
                         
                         Menu("移动到分组") {
-                            ForEach(NoteManager.shared.getSortedGroups(isKnowledgeGroup: note.isKnowledge)) { group in
+                            ForEach(NoteManager.shared.getSortedGroups()) { group in
                                 Button(group.name) {
                                     NoteManager.shared.moveNote(id: note.id, toGroupId: group.id)
                                 }
                                 .disabled(note.groupId == group.id)
-                            }
-                        }
-                        
-                        if note.isKnowledge {
-                            Menu("移动到普通分组") {
-                                ForEach(NoteManager.shared.getSortedGroups(isKnowledgeGroup: false)) { group in
-                                    Button(group.name) {
-                                        NoteManager.shared.moveNote(id: note.id, toGroupId: group.id)
-                                    }
-                                }
-                            }
-                        } else {
-                            Menu("保存为知识") {
-                                ForEach(NoteManager.shared.getSortedGroups(isKnowledgeGroup: true)) { group in
-                                    Button(group.name) {
-                                        NoteManager.shared.saveAsKnowledge(id: note.id, toGroupId: group.id)
-                                    }
-                                }
                             }
                         }
                         
@@ -777,7 +430,7 @@ struct NoteItemView: View {
                 HStack(spacing: 8) {
                     // 移动分组按钮
                     Menu {
-                        ForEach(NoteManager.shared.getSortedGroups(isKnowledgeGroup: note.isKnowledge)) { group in
+                        ForEach(NoteManager.shared.getSortedGroups()) { group in
                             Button(group.name) {
                                 NoteManager.shared.moveNote(id: note.id, toGroupId: group.id)
                             }
@@ -841,7 +494,7 @@ struct NoteItemView: View {
             Group {
                 if configManager.config.noteTheme == .gradient {
                     let baseColor = Color(hex: currentNote.colorHex)
-                    let opacity = (!note.isKnowledge && note.isCompleted) ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity
+                    let opacity = note.isCompleted ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity
                     ZStack {
                         // 1. 底色
                         RoundedRectangle(cornerRadius: 20)
@@ -865,7 +518,7 @@ struct NoteItemView: View {
                     }
                 } else {
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(hex: currentNote.colorHex).opacity((!note.isKnowledge && note.isCompleted) ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity))
+                        .fill(Color(hex: currentNote.colorHex).opacity(note.isCompleted ? configManager.config.noteOpacity * 0.5 : configManager.config.noteOpacity))
                 }
             }
             .overlay(
@@ -1136,27 +789,20 @@ struct NoteListView: View {
     
     /// 是否为笔记相关模式（显示完整工具栏）
     private var isNoteMode: Bool {
-        openMode == .all || openMode == .completed || openMode == .knowledge || openMode == .ai
+        openMode == .all || openMode == .completed
     }
     
     init(initialViewMode: ViewMode = .all) {
         self.openMode = initialViewMode
         _viewMode = State(initialValue: initialViewMode)
-        // 根据视图模式设置默认分组
         let config = FloatingButtonConfigManager.shared.config
-        if initialViewMode == .knowledge {
-            _selectedGroupId = State(initialValue: config.defaultKnowledgeGroupId ?? NoteGroup.defaultKnowledgeId)
-        } else {
-            _selectedGroupId = State(initialValue: config.defaultNoteGroupId ?? NoteGroup.defaultId)
-        }
+        _selectedGroupId = State(initialValue: config.defaultNoteGroupId ?? NoteGroup.defaultId)
     }
     
     enum ViewMode {
         case all
         case completed
         case clipboard
-        case knowledge
-        case ai
         case favorites
         case trash
     }
@@ -1166,8 +812,6 @@ struct NoteListView: View {
         case .all:
             return noteManager.notes.filter { 
                 !$0.isCompleted && 
-                !$0.isKnowledge &&
-                !$0.isAI &&
                 !$0.isDeleted &&
                 $0.groupId == selectedGroupId &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
@@ -1179,24 +823,6 @@ struct NoteListView: View {
                 $0.isCompleted && 
                 !$0.isDeleted &&
                 $0.groupId == selectedGroupId &&
-                (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
-                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
-                (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
-            }
-        case .knowledge:
-            return noteManager.notes.filter { 
-                $0.isKnowledge && 
-                !$0.isDeleted &&
-                !$0.isAI &&
-                $0.groupId == selectedGroupId &&
-                (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
-                (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
-                (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
-            }
-        case .ai:
-            return noteManager.notes.filter {
-                $0.isAI &&
-                !$0.isDeleted &&
                 (selectedTag == nil || $0.tags.contains(selectedTag!)) &&
                 (selectedColorHex == nil || $0.colorHex.uppercased() == selectedColorHex!.uppercased()) &&
                 (searchText.isEmpty || $0.content.localizedCaseInsensitiveContains(searchText))
@@ -1241,7 +867,7 @@ struct NoteListView: View {
                 toolbarView
             }
             
-            if isNoteMode && (viewMode == .all || viewMode == .completed || viewMode == .knowledge) {
+            if isNoteMode && (viewMode == .all || viewMode == .completed) {
                 groupSelectorView
             }
 
@@ -1260,21 +886,10 @@ struct NoteListView: View {
             // 点击背景区域时，完成所有正在编辑的笔记
             finishAllEditing()
         }
-        .onChange(of: viewMode) { _, newValue in
+        .onChange(of: viewMode) { _, _ in
             selectedTag = nil
             selectedColorHex = nil
             resetPagination()
-            // 切换模式时，如果当前选中的分组不属于该模式，则切换到默认分组
-            let currentGroup = noteManager.groups.first { $0.id == selectedGroupId }
-            if newValue == .knowledge {
-                if currentGroup?.isKnowledgeGroup != true {
-                    selectedGroupId = NoteGroup.defaultKnowledgeId
-                }
-            } else if newValue == .all || newValue == .completed {
-                if currentGroup?.isKnowledgeGroup == true {
-                    selectedGroupId = NoteGroup.defaultId
-                }
-            }
             
             // 切换模式时通知窗口重新计算高度
             NotificationCenter.default.post(name: Notification.Name("NoteViewModeChanged"), object: nil)
@@ -1300,11 +915,7 @@ struct NoteListView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("floatingButtonConfigChanged"))) { _ in
             // 配置更改时更新默认分组
             let config = configManager.config
-            if viewMode == .knowledge {
-                selectedGroupId = config.defaultKnowledgeGroupId ?? NoteGroup.defaultKnowledgeId
-            } else {
-                selectedGroupId = config.defaultNoteGroupId ?? NoteGroup.defaultId
-            }
+            selectedGroupId = config.defaultNoteGroupId ?? NoteGroup.defaultId
         }
         .onChange(of: visibleNotes) { _, _ in
             // 可见笔记内容或数量变化时通知窗口重新计算高度
@@ -1366,27 +977,7 @@ struct NoteListView: View {
                     }
                 }
                 
-                // 知识按钮 - 三态切换：all → knowledge → ai → all
-                ToolbarButton(icon: viewMode == .ai ? "brain.head.profile" : "book", isActive: viewMode == .knowledge || viewMode == .ai) {
-                    withAnimation {
-                        switch viewMode {
-                        case .knowledge:
-                            viewMode = .ai
-                        case .ai:
-                            viewMode = .all
-                        default:
-                            viewMode = .knowledge
-                        }
-                    }
-                }
-                
-                // AI 模式下的创建按钮
-                if viewMode == .ai {
-                    ToolbarButton(icon: "plus", isActive: false) {
-                        noteManager.addNewAINote(groupId: selectedGroupId)
-                    }
-                    .transition(.scale.combined(with: .opacity))
-                }
+
                 
                 // 常用文件按钮（仅非笔记专属模式显示）
                 if !isNoteMode {
@@ -1487,7 +1078,7 @@ struct NoteListView: View {
     }
 
     private var groupSelectorView: some View {
-        let groups = noteManager.getSortedGroups(isKnowledgeGroup: viewMode == .knowledge)
+        let groups = noteManager.getSortedGroups()
             .filter { $0.id != NoteGroup.colorGroupId } // 过滤颜色列表分组
             
         let maxPerRow = 6
@@ -1627,49 +1218,29 @@ struct NoteListView: View {
                         .cornerRadius(12)
                     } else {
                         ForEach(Array(visibleNotes.enumerated()), id: \.element.id) { index, note in
-                            if note.isAI {
-                                AINoteItemView(note: note, onDelete: {
-                                    DispatchQueue.main.async {
-                                        noteManager.deleteNote(id: note.id)
-                                    }
-                                }, onColorFilterClick: { colorHex in
-                                    if selectedColorHex?.uppercased() == colorHex.uppercased() {
-                                        selectedColorHex = nil
-                                    } else {
-                                        selectedColorHex = colorHex
-                                    }
-                                })
-                                .id(note.id)
-                                .onAppear {
-                                    if index >= visibleNotes.count - 3 {
-                                        loadMoreNotes()
-                                    }
+                            NoteItemView(note: note, selectedTag: selectedTag, onDelete: {
+                                DispatchQueue.main.async {
+                                    noteManager.deleteNote(id: note.id)
                                 }
-                            } else {
-                                NoteItemView(note: note, selectedTag: selectedTag, onDelete: {
-                                    DispatchQueue.main.async {
-                                        noteManager.deleteNote(id: note.id)
-                                    }
-                                }, onToggle: {
-                                    noteManager.toggleCompleted(id: note.id)
-                                }, onTagClick: { clickedTag in
-                                    if selectedTag == clickedTag {
-                                        selectedTag = nil
-                                    } else {
-                                        selectedTag = clickedTag
-                                    }
-                                }, onColorFilterClick: { colorHex in
-                                    if selectedColorHex?.uppercased() == colorHex.uppercased() {
-                                        selectedColorHex = nil
-                                    } else {
-                                        selectedColorHex = colorHex
-                                    }
-                                })
-                                .id(note.id)
-                                .onAppear {
-                                    if index >= visibleNotes.count - 3 {
-                                        loadMoreNotes()
-                                    }
+                            }, onToggle: {
+                                noteManager.toggleCompleted(id: note.id)
+                            }, onTagClick: { clickedTag in
+                                if selectedTag == clickedTag {
+                                    selectedTag = nil
+                                } else {
+                                    selectedTag = clickedTag
+                                }
+                            }, onColorFilterClick: { colorHex in
+                                if selectedColorHex?.uppercased() == colorHex.uppercased() {
+                                    selectedColorHex = nil
+                                } else {
+                                    selectedColorHex = colorHex
+                                }
+                            })
+                            .id(note.id)
+                            .onAppear {
+                                if index >= visibleNotes.count - 3 {
+                                    loadMoreNotes()
                                 }
                             }
                         }
@@ -1758,11 +1329,10 @@ struct GroupManagerView: View {
     @StateObject private var configManager = FloatingButtonConfigManager.shared
     @State private var newGroupName = ""
     @State private var newGroupIcon = "folder"
-    @State private var isKnowledgeGroup = false
     @State private var showIconPicker = false
     
     private var isGroupLimitReached: Bool {
-        noteManager.getSortedGroups(isKnowledgeGroup: isKnowledgeGroup).count >= 6
+        noteManager.getSortedGroups().count >= 6
     }
     
     var body: some View {
@@ -1802,22 +1372,7 @@ struct GroupManagerView: View {
                             get: { configManager.config.defaultNoteGroupId ?? NoteGroup.defaultId },
                             set: { configManager.updateDefaultNoteGroupId($0) }
                         )) {
-                            ForEach(noteManager.getSortedGroups(isKnowledgeGroup: false)) { group in
-                                Text(group.name).tag(group.id)
-                            }
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 120)
-                    }
-                    
-                    HStack {
-                        Text(L10n.tr("notes.defaultKnowledgeGroup"))
-                        Spacer()
-                        Picker("", selection: Binding(
-                            get: { configManager.config.defaultKnowledgeGroupId ?? NoteGroup.defaultKnowledgeId },
-                            set: { configManager.updateDefaultKnowledgeGroupId($0) }
-                        )) {
-                            ForEach(noteManager.getSortedGroups(isKnowledgeGroup: true)) { group in
+                            ForEach(noteManager.getSortedGroups()) { group in
                                 Text(group.name).tag(group.id)
                             }
                         }
@@ -1848,7 +1403,7 @@ struct GroupManagerView: View {
                                 .disabled(isGroupLimitReached)
                             Button(L10n.tr("common.add")) {
                                 if !newGroupName.isEmpty && !isGroupLimitReached {
-                                    noteManager.addGroup(name: newGroupName, icon: newGroupIcon.isEmpty ? "folder" : newGroupIcon, isKnowledge: isKnowledgeGroup)
+                                    noteManager.addGroup(name: newGroupName, icon: newGroupIcon.isEmpty ? "folder" : newGroupIcon)
                                     newGroupName = ""
                                     newGroupIcon = "folder"
                                 }
@@ -1862,19 +1417,15 @@ struct GroupManagerView: View {
                                 .foregroundColor(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        
-                        Toggle("知识库分组", isOn: $isKnowledgeGroup)
-                            .toggleStyle(.checkbox)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 
                 Section("现有分组") {
-                    ForEach(noteManager.getSortedGroups(isKnowledgeGroup: isKnowledgeGroup)) { group in
+                    ForEach(noteManager.getSortedGroups()) { group in
                         GroupRow(group: group)
                     }
                     .onMove { source, destination in
-                        noteManager.moveGroup(from: source, to: destination, isKnowledgeGroup: isKnowledgeGroup)
+                        noteManager.moveGroup(from: source, to: destination)
                     }
                 }
             }
@@ -1930,14 +1481,7 @@ struct GroupRow: View {
             } else {
                 Image(systemName: group.icon)
                     .frame(width: 20)
-                VStack(alignment: .leading) {
-                    Text(group.name)
-                    if group.isKnowledgeGroup {
-                        Text(L10n.tr("notes.knowledgeBase"))
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                }
+                Text(group.name)
                 Spacer()
                 if !group.isPresetGroup {
                     // 活动分组标记（仅显示，不可切换）

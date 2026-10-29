@@ -600,23 +600,7 @@ struct GroupSettingsView: View {
                                 get: { configManager.config.defaultNoteGroupId ?? NoteGroup.defaultId },
                                 set: { configManager.updateDefaultNoteGroupId($0) }
                             )) {
-                                ForEach(noteManager.getSortedGroups(isKnowledgeGroup: false)) { group in
-                                    Text(group.name).tag(group.id)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                            .frame(width: 180)
-                        }
-                        
-                        SettingsRow(
-                            title: L10n.tr("settings.defaultKnowledgeGroup"),
-                            description: L10n.tr("settings.defaultKnowledgeGroupDesc")
-                        ) {
-                            Picker("", selection: Binding(
-                                get: { configManager.config.defaultKnowledgeGroupId ?? NoteGroup.defaultKnowledgeId },
-                                set: { configManager.updateDefaultKnowledgeGroupId($0) }
-                            )) {
-                                ForEach(noteManager.getSortedGroups(isKnowledgeGroup: true)) { group in
+                                ForEach(noteManager.getSortedGroups()) { group in
                                     Text(group.name).tag(group.id)
                                 }
                             }
@@ -625,28 +609,6 @@ struct GroupSettingsView: View {
                         }
                     }
                 }
-                
-                // 笔记分组排序 - 临时隐藏
-                // SettingsSection(title: "笔记分组排序", icon: "arrow.up.arrow.down") {
-                //     VStack(alignment: .leading, spacing: 8) {
-                //         Text("拖动分组以调整顺序")
-                //             .font(.caption)
-                //             .foregroundColor(.secondary)
-                //             .padding(.bottom, 4)
-                //         GroupSortList(isKnowledgeGroup: false)
-                //     }
-                // }
-                
-                // 知识分组排序 - 临时隐藏
-                // SettingsSection(title: "知识分组排序", icon: "arrow.up.arrow.down") {
-                //     VStack(alignment: .leading, spacing: 8) {
-                //         Text("拖动分组以调整顺序")
-                //             .font(.caption)
-                //             .foregroundColor(.secondary)
-                //             .padding(.bottom, 4)
-                //         GroupSortList(isKnowledgeGroup: true)
-                //     }
-                // }
             }
             .padding(24)
         }
@@ -655,12 +617,11 @@ struct GroupSettingsView: View {
 
 // MARK: - 分组排序列表
 struct GroupSortList: View {
-    let isKnowledgeGroup: Bool
     @ObservedObject private var noteManager = NoteManager.shared
     @State private var draggingGroup: NoteGroup?
     
     var sortedGroups: [NoteGroup] {
-        noteManager.getSortedGroups(isKnowledgeGroup: isKnowledgeGroup)
+        noteManager.getSortedGroups()
     }
     
     var body: some View {
@@ -681,8 +642,7 @@ struct GroupSortList: View {
                     .onDrop(of: [.text], delegate: GroupDropDelegate(
                         item: group,
                         items: sortedGroups,
-                        draggingItem: $draggingGroup,
-                        isKnowledgeGroup: isKnowledgeGroup
+                        draggingItem: $draggingGroup
                     ))
                 
                 if group.id != sortedGroups.last?.id {
@@ -704,7 +664,6 @@ struct GroupDropDelegate: DropDelegate {
     let item: NoteGroup
     let items: [NoteGroup]
     @Binding var draggingItem: NoteGroup?
-    let isKnowledgeGroup: Bool
     
     func performDrop(info: DropInfo) -> Bool {
         draggingItem = nil
@@ -723,8 +682,7 @@ struct GroupDropDelegate: DropDelegate {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             NoteManager.shared.moveGroup(
                 from: IndexSet(integer: fromIndex),
-                to: toIndex > fromIndex ? toIndex + 1 : toIndex,
-                isKnowledgeGroup: isKnowledgeGroup
+                to: toIndex > fromIndex ? toIndex + 1 : toIndex
             )
         }
     }
@@ -2212,317 +2170,6 @@ struct HotkeyConfigurationRow: View {
                 }
             )
         )
-    }
-}
-
-// MARK: - AI 设置
-struct AISettingsView: View {
-    @ObservedObject private var configManager = FloatingButtonConfigManager.shared
-    @ObservedObject private var aiService = AIService.shared
-    @State private var opencodeModels: [String] = []
-    @State private var isLoadingModels = false
-    
-    // AI 提供商预设
-    enum AIPreset: String, CaseIterable {
-        case openai = "OpenAI"
-        case deepseek = "DeepSeek"
-        case custom = "自定义"
-
-        var localizedName: String {
-            switch self {
-            case .openai: return "OpenAI"
-            case .deepseek: return "DeepSeek"
-            case .custom: return L10n.tr("config.custom")
-            }
-        }
-
-        var url: String {
-            switch self {
-            case .openai: return "https://api.openai.com/v1"
-            case .deepseek: return "https://api.deepseek.com"
-            case .custom: return ""
-            }
-        }
-        
-        var model: String {
-            switch self {
-            case .openai: return "gpt-4o-mini"
-            case .deepseek: return "deepseek-chat"
-            case .custom: return ""
-            }
-        }
-    }
-    
-    private var currentPreset: AIPreset {
-        let url = configManager.config.aiUrl
-        if url == AIPreset.openai.url { return .openai }
-        if url == AIPreset.deepseek.url || url == "https://api.deepseek.com/v1" { return .deepseek }
-        return .custom
-    }
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // AI 模式选择
-                SettingsSection(title: L10n.tr("settings.aiMode"), icon: "cpu") {
-                    SettingsRow(
-                        title: L10n.tr("settings.aiBackend"),
-                        description: L10n.tr("settings.aiBackendDesc")
-                    ) {
-                        Picker("", selection: Binding(
-                            get: { configManager.config.aiMode },
-                            set: { configManager.updateAiMode($0) }
-                        )) {
-                            ForEach(FloatingButtonConfig.AIMode.allCases, id: \.self) { mode in
-                                Text(mode.localizedName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 200)
-                    }
-                }
-                
-                if configManager.config.aiMode == .api {
-                    apiSettingsSection
-                } else {
-                    opencodeSettingsSection
-                }
-            }
-            .padding(24)
-        }
-    }
-    
-    // MARK: - API 模式设置
-    private var apiSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            SettingsSection(title: L10n.tr("settings.aiProvider"), icon: "sparkles") {
-                VStack(alignment: .leading, spacing: 16) {
-                    SettingsRow(
-                        title: L10n.tr("settings.preset"),
-                        description: L10n.tr("settings.presetDesc")
-                    ) {
-                        Picker("", selection: Binding(
-                            get: { currentPreset },
-                            set: { preset in
-                                if preset != .custom {
-                                    configManager.updateAiUrl(preset.url)
-                                    configManager.updateAiModel(preset.model)
-                                }
-                            }
-                        )) {
-                            ForEach(AIPreset.allCases, id: \.self) { preset in
-                                Text(preset.localizedName).tag(preset)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
-                    }
-                    
-                    SettingsRow(
-                        title: "API URL",
-                        description: L10n.tr("settings.apiEndpointDesc")
-                    ) {
-                        TextField("https://api.openai.com/v1", text: Binding(
-                            get: { configManager.config.aiUrl },
-                            set: { configManager.updateAiUrl($0) }
-                        ))
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 250)
-                    }
-                    
-                    SettingsRow(
-                        title: L10n.tr("settings.model"),
-                        description: L10n.tr("settings.modelDesc")
-                    ) {
-                        TextField("gpt-4o-mini", text: Binding(
-                            get: { configManager.config.aiModel },
-                            set: { configManager.updateAiModel($0) }
-                        ))
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 250)
-                    }
-                    
-                    SettingsRow(
-                        title: "API Key",
-                        description: L10n.tr("settings.apiKeyDesc")
-                    ) {
-                        SecureField("sk-...", text: Binding(
-                            get: { configManager.config.aiApiKey },
-                            set: { configManager.updateAiApiKey($0) }
-                        ))
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 250)
-                    }
-                    
-                    SettingsRow(
-                        title: L10n.tr("settings.systemPrompt"),
-                        description: L10n.tr("settings.systemPromptDesc")
-                    ) {
-                        TextField("你是一个知识问答助手...", text: Binding(
-                            get: { configManager.config.aiSystemPrompt },
-                            set: { configManager.updateAiSystemPrompt($0) }
-                        ))
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 250)
-                    }
-                }
-            }
-            
-            SettingsSection(title: L10n.tr("settings.instructions"), icon: "info.circle") {
-                Text(L10n.tr("settings.apiModeInstructions"))
-                    .font(.system(size: 13))
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
-            }
-        }
-    }
-    
-    // MARK: - opencode 模式设置
-    private var opencodeSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            SettingsSection(title: L10n.tr("settings.opencodeConfig"), icon: "terminal") {
-                VStack(alignment: .leading, spacing: 16) {
-                    SettingsRow(
-                        title: L10n.tr("settings.model"),
-                        description: L10n.tr("settings.opencodeModelDesc")
-                    ) {
-                        HStack(spacing: 8) {
-                            Picker("", selection: Binding(
-                                get: { configManager.config.opencodeModel },
-                                set: { configManager.updateOpencodeModel($0) }
-                            )) {
-                                if opencodeModels.isEmpty && !isLoadingModels {
-                                    Text(configManager.config.opencodeModel.isEmpty ? "点击刷新获取" : configManager.config.opencodeModel)
-                                        .tag(configManager.config.opencodeModel)
-                                }
-                                ForEach(opencodeModels, id: \.self) { model in
-                                    Text(model).tag(model)
-                                }
-                            }
-                            .frame(width: 220)
-                            
-                            Button(action: { fetchOpencodeModels() }) {
-                                if isLoadingModels {
-                                    ProgressView()
-                                        .scaleEffect(0.6)
-                                        .frame(width: 16, height: 16)
-                                } else {
-                                    Image(systemName: "arrow.clockwise")
-                                        .font(.system(size: 12))
-                                }
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(isLoadingModels)
-                            .help(L10n.tr("settings.refreshModels"))
-                        }
-                    }
-                }
-            }
-            .onAppear { fetchOpencodeModels() }
-            
-            // ACP 服务控制
-            SettingsSection(title: L10n.tr("settings.acpService"), icon: "point.3.connected.trianglepath.dotted") {
-                VStack(alignment: .leading, spacing: 16) {
-                    SettingsRow(
-                        title: L10n.tr("settings.status"),
-                        description: L10n.tr("settings.statusDesc")
-                    ) {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(acpStatusColor)
-                                .frame(width: 8, height: 8)
-                            Text(AIService.shared.acpStatus.localizedName)
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
-                            
-                            Spacer().frame(width: 8)
-                            
-                            if AIService.shared.acpStatus == .disconnected {
-                                Button(L10n.tr("common.start")) {
-                                    Task {
-                                        await AIService.shared.connectACP()
-                                    }
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
-                            } else if AIService.shared.acpStatus == .connected {
-                                Button(L10n.tr("common.stop")) {
-                                    Task {
-                                        await AIService.shared.disconnectACP()
-                                    }
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            } else {
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
-                        }
-                    }
-                    
-                    SettingsRow(
-                        title: L10n.tr("settings.autoStart"),
-                        description: L10n.tr("settings.autoStartDesc")
-                    ) {
-                        Toggle("", isOn: Binding(
-                            get: { configManager.config.acpAutoStart },
-                            set: { configManager.updateAcpAutoStart($0) }
-                        ))
-                        .toggleStyle(.switch)
-                    }
-                }
-            }
-            
-            SettingsSection(title: "说明", icon: "info.circle") {
-                Text("opencode 模式通过本地 opencode CLI 工具调用 AI，无需 API Key。请确保已安装 opencode（brew install opencode 或 npm i -g opencode）。\n\n免费模型：opencode/kimi-k2.5-free、opencode/minimax-m2.1-free 等。\n\n启动 ACP 服务可减少首次 AI 查询的延迟。")
-                    .font(.system(size: 13))
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
-            }
-        }
-    }
-    
-    /// ACP 状态对应的颜色
-    private var acpStatusColor: Color {
-        switch AIService.shared.acpStatus {
-        case .disconnected: return .gray
-        case .connecting: return .orange
-        case .connected: return .green
-        }
-    }
-    
-    private func fetchOpencodeModels() {
-        isLoadingModels = true
-        Task.detached {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/opencode")
-            process.arguments = ["models"]
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = FileHandle.nullDevice
-            
-            do {
-                try process.run()
-                process.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: data, encoding: .utf8) ?? ""
-                let models = output.components(separatedBy: "\n")
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                    .filter { $0.hasSuffix("-free") }
-                
-                await MainActor.run {
-                    self.opencodeModels = models
-                    if !models.isEmpty && self.configManager.config.opencodeModel.isEmpty {
-                        self.configManager.updateOpencodeModel(models[0])
-                    }
-                    self.isLoadingModels = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.isLoadingModels = false
-                }
-            }
-        }
     }
 }
 

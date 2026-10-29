@@ -10,8 +10,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var floatingWindows: [NSWindow] = [] // 动态管理的悬浮球窗口数组
     private var noteWindow: NoteWindow?
-    private var memoryReviewReminderWindow: MemoryReviewReminderWindow?
-    private var memoryReviewDialogWindow: MemoryReviewDialogWindow?
     private var translationPopupWindow: TranslationPopupWindow?
     private var attachedWindow: NSWindow? // 笔记窗口当前依附的悬浮球窗口
     private var attachedButtonIndex: Int? // 笔记窗口当前依附的悬浮球索引
@@ -60,9 +58,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 初始化自动隐藏管理器
         _ = AutoHideManager.shared
 
-        // 初始化记忆功能管理器
-        _ = MemoryManager.shared
-
         // 初始化备份管理器（触发定时备份调度）
         _ = BackupManager.shared
 
@@ -70,14 +65,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 请求系统通知权限（用于非侵入式记忆提示）
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-
-        // 自动启动 ACP 服务（如果配置开启且使用 opencode 模式）
-        let aiConfig = FloatingButtonConfigManager.shared.config
-        if aiConfig.aiMode == .opencode && aiConfig.acpAutoStart {
-            Task { @MainActor in
-                await AIService.shared.connectACP()
-            }
-        }
 
         // 首次启动时打开使用说明
         if AppDatabase.shared.settingsStore.isFirstLaunch() {
@@ -172,27 +159,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleMemoryContextPrompt(_:)),
-            name: Notification.Name("MemoryContextPrompt"),
-            object: nil
-        )
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleMemoryReviewReminder(_:)),
-            name: Notification.Name("MemoryReviewReminder"),
-            object: nil
-        )
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleOpenMemoryReviewDialogNow),
-            name: Notification.Name("OpenMemoryReviewDialogNow"),
-            object: nil
-        )
-
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(showTranslationPopupWindow),
             name: .showTranslationPopup,
             object: nil
@@ -214,61 +180,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             Logger.shared.log("✅ 启动自检：辅助功能与屏幕录制权限已就绪")
         }
-    }
-
-    @objc private func handleMemoryContextPrompt(_ notification: Notification) {
-        let message = (notification.userInfo?["message"] as? String) ?? "有相关知识可回顾"
-        sendMemoryNotification(title: "记忆提示", body: message)
-    }
-
-    @objc private func handleMemoryReviewReminder(_ notification: Notification) {
-        let message = (notification.userInfo?["message"] as? String) ?? "有知识到达复习时间"
-        sendMemoryNotification(title: "复习提醒", body: message)
-
-        let window = MemoryReviewReminderWindow(message: message)
-        window.onStartReview = { [weak self] in
-            self?.openMemoryReviewDialog()
-        }
-        memoryReviewReminderWindow = window
-        window.showBottomRight()
-    }
-
-    @objc private func handleOpenMemoryReviewDialogNow() {
-        openMemoryReviewDialog()
-    }
-
-    private func openMemoryReviewDialog() {
-        if let existing = memoryReviewDialogWindow {
-            let minWidth = MemoryReviewDialogWindow.defaultSize.width
-            let minHeight = MemoryReviewDialogWindow.defaultSize.height
-            if existing.frame.width < minWidth || existing.frame.height < minHeight {
-                let origin = existing.frame.origin
-                let target = NSRect(origin: origin, size: NSSize(width: minWidth, height: minHeight))
-                existing.setFrame(target, display: true, animate: false)
-            }
-            existing.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-
-        let dialog = MemoryReviewDialogWindow()
-        memoryReviewDialogWindow = dialog
-        dialog.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    private func sendMemoryNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
     
     @objc private func handleGetURL(_ event: NSAppleEventDescriptor, withReply reply: NSAppleEventDescriptor) {
@@ -667,9 +578,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Logger.shared.log("📁 执行常用文件操作")
             toggleNoteWindow(attachedTo: clickedView.window, buttonIndex: clickedView.buttonIndex, mode: .favorites)
 
-        case .showKnowledgeList:
-            Logger.shared.log("📚 执行知识列表操作")
-            toggleNoteWindow(attachedTo: clickedView.window, buttonIndex: clickedView.buttonIndex, mode: .knowledge)
         case .toggleWindow:
             Logger.shared.log("🪟 执行控制窗口操作")
             WindowManager.shared.handleToggleWindow(for: clickedView.buttonIndex)

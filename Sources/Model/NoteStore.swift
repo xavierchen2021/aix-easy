@@ -8,12 +8,20 @@ class NoteStore {
         self.db = db
         try? createTables()
         migrateAddDeletedColumns()
-        migrateAddAIColumns()
         migrateAddPinnedAtColumn()
-        migrateAddMemoryColumns()
+        migrateAddInProgressColumn()
         migrateAddGroupPasswordColumn()
         migrateAddActivityColumns()
         migrateAddTagColumn()
+        migrateDropLegacyKnowledgeColumns()
+    }
+
+    private func migrateDropLegacyKnowledgeColumns() {
+        try? db.execute(sql: "ALTER TABLE NoteGroup DROP COLUMN isKnowledgeGroup;")
+        try? db.execute(sql: "ALTER TABLE Note DROP COLUMN isKnowledge;")
+        try? db.execute(sql: "ALTER TABLE Note DROP COLUMN isMemory;")
+        try? db.execute(sql: "ALTER TABLE Note DROP COLUMN isAI;")
+        try? db.execute(sql: "ALTER TABLE Note DROP COLUMN aiSessionId;")
     }
 
     private func migrateAddTagColumn() {
@@ -34,24 +42,19 @@ class NoteStore {
         }
     }
 
-    private func migrateAddMemoryColumns() {
+    private func migrateAddInProgressColumn() {
         let checkSql = "PRAGMA table_info(Note);"
         guard let stmt = try? db.prepareStatement(sql: checkSql) else { return }
         defer { sqlite3_finalize(stmt) }
 
-        var hasIsMemory = false
         var hasIsInProgress = false
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let name = sqlite3_column_text(stmt, 1) {
                 let colName = String(cString: name)
-                if colName == "isMemory" { hasIsMemory = true }
                 if colName == "isInProgress" { hasIsInProgress = true }
             }
         }
 
-        if !hasIsMemory {
-            try? db.execute(sql: "ALTER TABLE Note ADD COLUMN isMemory INTEGER NOT NULL DEFAULT 0;")
-        }
         if !hasIsInProgress {
             try? db.execute(sql: "ALTER TABLE Note ADD COLUMN isInProgress INTEGER NOT NULL DEFAULT 0;")
         }
@@ -140,29 +143,6 @@ class NoteStore {
         }
     }
     
-    private func migrateAddAIColumns() {
-        let checkSql = "PRAGMA table_info(Note);"
-        guard let stmt = try? db.prepareStatement(sql: checkSql) else { return }
-        defer { sqlite3_finalize(stmt) }
-        
-        var hasIsAI = false
-        var hasAiSessionId = false
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let name = sqlite3_column_text(stmt, 1) {
-                let colName = String(cString: name)
-                if colName == "isAI" { hasIsAI = true }
-                if colName == "aiSessionId" { hasAiSessionId = true }
-            }
-        }
-        
-        if !hasIsAI {
-            try? db.execute(sql: "ALTER TABLE Note ADD COLUMN isAI INTEGER NOT NULL DEFAULT 0;")
-        }
-        if !hasAiSessionId {
-            try? db.execute(sql: "ALTER TABLE Note ADD COLUMN aiSessionId TEXT;")
-        }
-    }
-    
     private func migrateAddPinnedAtColumn() {
         let checkSql = "PRAGMA table_info(Note);"
         guard let stmt = try? db.prepareStatement(sql: checkSql) else { return }
@@ -187,7 +167,6 @@ class NoteStore {
             id TEXT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
             icon TEXT NOT NULL,
-            isKnowledgeGroup INTEGER NOT NULL,
             sortOrder INTEGER NOT NULL
         );
         """
@@ -200,9 +179,13 @@ class NoteStore {
             createdAt REAL NOT NULL,
             colorHex TEXT,
             groupId TEXT NOT NULL,
-            isKnowledge INTEGER NOT NULL,
-            isMemory INTEGER NOT NULL DEFAULT 0,
+            isDeleted INTEGER NOT NULL DEFAULT 0,
+            deletedAt REAL,
+            pinnedAt REAL,
             isInProgress INTEGER NOT NULL DEFAULT 0,
+            modifiedAt REAL,
+            completedAt REAL,
+            tag TEXT,
             FOREIGN KEY (groupId) REFERENCES NoteGroup(id)
         );
         """
@@ -214,7 +197,7 @@ class NoteStore {
     // MARK: - Note Operations
     
     func insertNote(_ note: Note) throws {
-        let sql = "INSERT OR REPLACE INTO Note (id, content, isCompleted, createdAt, colorHex, groupId, isKnowledge, isDeleted, deletedAt, isAI, aiSessionId, pinnedAt, isMemory, isInProgress, modifiedAt, completedAt, tag) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        let sql = "INSERT OR REPLACE INTO Note (id, content, isCompleted, createdAt, colorHex, groupId, isDeleted, deletedAt, pinnedAt, isInProgress, modifiedAt, completedAt, tag) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
         guard let statement = try db.prepareStatement(sql: sql) else { return }
         defer { sqlite3_finalize(statement) }
         
@@ -234,50 +217,39 @@ class NoteStore {
         let groupIdStr = note.groupId.uuidString as NSString
         sqlite3_bind_text(statement, 6, groupIdStr.utf8String, -1, nil)
         
-        sqlite3_bind_int(statement, 7, note.isKnowledge ? 1 : 0)
-        sqlite3_bind_int(statement, 8, note.isDeleted ? 1 : 0)
+        sqlite3_bind_int(statement, 7, note.isDeleted ? 1 : 0)
         
         if let deletedAt = note.deletedAt {
-            sqlite3_bind_double(statement, 9, deletedAt.timeIntervalSinceReferenceDate)
+            sqlite3_bind_double(statement, 8, deletedAt.timeIntervalSinceReferenceDate)
+        } else {
+            sqlite3_bind_null(statement, 8)
+        }
+        
+        if let pinnedAt = note.pinnedAt {
+            sqlite3_bind_double(statement, 9, pinnedAt.timeIntervalSinceReferenceDate)
         } else {
             sqlite3_bind_null(statement, 9)
         }
+
+        sqlite3_bind_int(statement, 10, note.isInProgress ? 1 : 0)
         
-        sqlite3_bind_int(statement, 10, note.isAI ? 1 : 0)
-        
-        if let aiSessionId = note.aiSessionId {
-            let sessionIdStr = aiSessionId as NSString
-            sqlite3_bind_text(statement, 11, sessionIdStr.utf8String, -1, nil)
+        if let modifiedAt = note.modifiedAt {
+            sqlite3_bind_double(statement, 11, modifiedAt.timeIntervalSinceReferenceDate)
         } else {
             sqlite3_bind_null(statement, 11)
         }
         
-        if let pinnedAt = note.pinnedAt {
-            sqlite3_bind_double(statement, 12, pinnedAt.timeIntervalSinceReferenceDate)
+        if let completedAt = note.completedAt {
+            sqlite3_bind_double(statement, 12, completedAt.timeIntervalSinceReferenceDate)
         } else {
             sqlite3_bind_null(statement, 12)
         }
 
-        sqlite3_bind_int(statement, 13, note.isMemory ? 1 : 0)
-        sqlite3_bind_int(statement, 14, note.isInProgress ? 1 : 0)
-        
-        if let modifiedAt = note.modifiedAt {
-            sqlite3_bind_double(statement, 15, modifiedAt.timeIntervalSinceReferenceDate)
-        } else {
-            sqlite3_bind_null(statement, 15)
-        }
-        
-        if let completedAt = note.completedAt {
-            sqlite3_bind_double(statement, 16, completedAt.timeIntervalSinceReferenceDate)
-        } else {
-            sqlite3_bind_null(statement, 16)
-        }
-
         if let tag = note.tag {
             let tagStr = tag as NSString
-            sqlite3_bind_text(statement, 17, tagStr.utf8String, -1, nil)
+            sqlite3_bind_text(statement, 13, tagStr.utf8String, -1, nil)
         } else {
-            sqlite3_bind_null(statement, 17)
+            sqlite3_bind_null(statement, 13)
         }
         
         guard sqlite3_step(statement) == SQLITE_DONE else {
@@ -299,7 +271,7 @@ class NoteStore {
     }
     
     func getAllNotes() -> [Note] {
-        let sql = "SELECT id, content, isCompleted, createdAt, colorHex, groupId, isKnowledge, isDeleted, deletedAt, isAI, aiSessionId, pinnedAt, isMemory, isInProgress, modifiedAt, completedAt, tag FROM Note ORDER BY CASE WHEN pinnedAt IS NOT NULL THEN 0 ELSE 1 END, pinnedAt DESC, createdAt DESC;"
+        let sql = "SELECT id, content, isCompleted, createdAt, colorHex, groupId, isDeleted, deletedAt, pinnedAt, isInProgress, modifiedAt, completedAt, tag FROM Note ORDER BY CASE WHEN pinnedAt IS NOT NULL THEN 0 ELSE 1 END, pinnedAt DESC, createdAt DESC;"
         guard let statement = try? db.prepareStatement(sql: sql) else { return [] }
         defer { sqlite3_finalize(statement) }
         
@@ -321,38 +293,33 @@ class NoteStore {
             let groupIdStr = Self.getString(statement, 5) ?? NoteGroup.defaultId.uuidString
             let groupId = UUID(uuidString: groupIdStr) ?? NoteGroup.defaultId
             
-            let isKnowledge = sqlite3_column_int(statement, 6) != 0
-            let isDeleted = sqlite3_column_int(statement, 7) != 0
+            let isDeleted = sqlite3_column_int(statement, 6) != 0
             
             var deletedAt: Date? = nil
-            if sqlite3_column_type(statement, 8) != SQLITE_NULL {
-                deletedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 8))
+            if sqlite3_column_type(statement, 7) != SQLITE_NULL {
+                deletedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 7))
             }
-            
-            let isAI = sqlite3_column_int(statement, 9) != 0
-            let aiSessionId = Self.getString(statement, 10)
             
             var pinnedAt: Date? = nil
-            if sqlite3_column_type(statement, 11) != SQLITE_NULL {
-                pinnedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 11))
+            if sqlite3_column_type(statement, 8) != SQLITE_NULL {
+                pinnedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 8))
             }
 
-            let isMemory = sqlite3_column_int(statement, 12) != 0
-            let isInProgress = sqlite3_column_int(statement, 13) != 0
+            let isInProgress = sqlite3_column_int(statement, 9) != 0
             
             var modifiedAt: Date? = nil
-            if sqlite3_column_type(statement, 14) != SQLITE_NULL {
-                modifiedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 14))
+            if sqlite3_column_type(statement, 10) != SQLITE_NULL {
+                modifiedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 10))
             }
             
             var completedAt: Date? = nil
-            if sqlite3_column_type(statement, 15) != SQLITE_NULL {
-                completedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 15))
+            if sqlite3_column_type(statement, 11) != SQLITE_NULL {
+                completedAt = Date(timeIntervalSinceReferenceDate: sqlite3_column_double(statement, 11))
             }
 
-            let tag = Self.getString(statement, 16)
+            let tag = Self.getString(statement, 12)
             
-            let note = Note(id: id, content: content, isCompleted: isCompleted, createdAt: createdAt, colorHex: colorHex, groupId: groupId, isKnowledge: isKnowledge, isDeleted: isDeleted, deletedAt: deletedAt, isAI: isAI, aiSessionId: aiSessionId, pinnedAt: pinnedAt, isMemory: isMemory, isInProgress: isInProgress, modifiedAt: modifiedAt, completedAt: completedAt, tag: tag)
+            let note = Note(id: id, content: content, isCompleted: isCompleted, createdAt: createdAt, colorHex: colorHex, groupId: groupId, isDeleted: isDeleted, deletedAt: deletedAt, pinnedAt: pinnedAt, isInProgress: isInProgress, modifiedAt: modifiedAt, completedAt: completedAt, tag: tag)
             notes.append(note)
         }
         
@@ -362,7 +329,7 @@ class NoteStore {
     // MARK: - Group Operations
     
     func insertGroup(_ group: NoteGroup) throws {
-        let sql = "INSERT OR REPLACE INTO NoteGroup (id, name, icon, isKnowledgeGroup, sortOrder, isLocked, isActivityGroup) VALUES (?, ?, ?, ?, ?, ?, ?);"
+        let sql = "INSERT OR REPLACE INTO NoteGroup (id, name, icon, sortOrder, isLocked, isActivityGroup) VALUES (?, ?, ?, ?, ?, ?);"
         guard let statement = try db.prepareStatement(sql: sql) else { return }
         defer { sqlite3_finalize(statement) }
         
@@ -375,10 +342,9 @@ class NoteStore {
         let iconStr = group.icon as NSString
         sqlite3_bind_text(statement, 3, iconStr.utf8String, -1, nil)
         
-        sqlite3_bind_int(statement, 4, group.isKnowledgeGroup ? 1 : 0)
-        sqlite3_bind_int(statement, 5, Int32(group.sortOrder))
-        sqlite3_bind_int(statement, 6, group.isLocked ? 1 : 0)
-        sqlite3_bind_int(statement, 7, group.isActivityGroup ? 1 : 0)
+        sqlite3_bind_int(statement, 4, Int32(group.sortOrder))
+        sqlite3_bind_int(statement, 5, group.isLocked ? 1 : 0)
+        sqlite3_bind_int(statement, 6, group.isActivityGroup ? 1 : 0)
         
         guard sqlite3_step(statement) == SQLITE_DONE else {
             throw SQLiteError.step(message: db.errorMessage)
@@ -399,7 +365,7 @@ class NoteStore {
     }
     
     func getAllGroups() -> [NoteGroup] {
-        let sql = "SELECT id, name, icon, isKnowledgeGroup, sortOrder, isLocked, isActivityGroup FROM NoteGroup ORDER BY sortOrder ASC;"
+        let sql = "SELECT id, name, icon, sortOrder, isLocked, isActivityGroup FROM NoteGroup ORDER BY sortOrder ASC;"
         guard let statement = try? db.prepareStatement(sql: sql) else { return [] }
         defer { sqlite3_finalize(statement) }
         
@@ -413,12 +379,11 @@ class NoteStore {
                 continue
             }
             
-            let isKnowledgeGroup = sqlite3_column_int(statement, 3) != 0
-            let sortOrder = Int(sqlite3_column_int(statement, 4))
-            let isLocked = sqlite3_column_int(statement, 5) != 0
-            let isActivityGroup = sqlite3_column_int(statement, 6) != 0
+            let sortOrder = Int(sqlite3_column_int(statement, 3))
+            let isLocked = sqlite3_column_int(statement, 4) != 0
+            let isActivityGroup = sqlite3_column_int(statement, 5) != 0
             
-            let group = NoteGroup(id: id, name: name, icon: icon, isKnowledgeGroup: isKnowledgeGroup, sortOrder: sortOrder, isLocked: isLocked, isActivityGroup: isActivityGroup)
+            let group = NoteGroup(id: id, name: name, icon: icon, sortOrder: sortOrder, isLocked: isLocked, isActivityGroup: isActivityGroup)
             groups.append(group)
         }
         
@@ -453,7 +418,7 @@ class NoteStore {
 
         // Read groups
         var groups: [NoteGroup] = []
-        let groupSQL = "SELECT id, name, icon, isKnowledgeGroup, sortOrder FROM NoteGroup ORDER BY sortOrder ASC;"
+        let groupSQL = "SELECT id, name, icon, sortOrder FROM NoteGroup ORDER BY sortOrder ASC;"
         guard let gStmt = try db.prepareStatement(sql: groupSQL) else { throw SQLiteError.prepare(message: db.errorMessage) }
         defer { sqlite3_finalize(gStmt) }
         while sqlite3_step(gStmt) == SQLITE_ROW {
@@ -464,14 +429,13 @@ class NoteStore {
                   let iconPtr = sqlite3_column_text(gStmt, 2) else { continue }
             let name = String(cString: UnsafeRawPointer(namePtr).assumingMemoryBound(to: CChar.self))
             let icon = String(cString: UnsafeRawPointer(iconPtr).assumingMemoryBound(to: CChar.self))
-            let isKnowledgeGroup = sqlite3_column_int(gStmt, 3) != 0
-            let sortOrder = Int(sqlite3_column_int(gStmt, 4))
-            groups.append(NoteGroup(id: id, name: name, icon: icon, isKnowledgeGroup: isKnowledgeGroup, sortOrder: sortOrder))
+            let sortOrder = Int(sqlite3_column_int(gStmt, 3))
+            groups.append(NoteGroup(id: id, name: name, icon: icon, sortOrder: sortOrder))
         }
 
         // Read notes
         var notes: [Note] = []
-        let noteSQL = "SELECT id, content, isCompleted, createdAt, colorHex, groupId, isKnowledge FROM Note ORDER BY createdAt DESC;"
+        let noteSQL = "SELECT id, content, isCompleted, createdAt, colorHex, groupId FROM Note ORDER BY createdAt DESC;"
         guard let nStmt = try db.prepareStatement(sql: noteSQL) else { throw SQLiteError.prepare(message: db.errorMessage) }
         defer { sqlite3_finalize(nStmt) }
         while sqlite3_step(nStmt) == SQLITE_ROW {
@@ -488,8 +452,7 @@ class NoteStore {
             
             let groupIdStr = sqlite3_column_text(nStmt, 5).flatMap { String(cString: UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self)) } ?? NoteGroup.defaultId.uuidString
             let groupId = UUID(uuidString: groupIdStr) ?? NoteGroup.defaultId
-            let isKnowledge = sqlite3_column_int(nStmt, 6) != 0
-            notes.append(Note(id: id, content: content, isCompleted: isCompleted, createdAt: createdAt, colorHex: colorHex, groupId: groupId, isKnowledge: isKnowledge))
+            notes.append(Note(id: id, content: content, isCompleted: isCompleted, createdAt: createdAt, colorHex: colorHex, groupId: groupId))
         }
 
         return (groups, notes)

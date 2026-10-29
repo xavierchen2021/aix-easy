@@ -75,7 +75,6 @@
 "settings.reminders" = "Reminders";
 "settings.about" = "About";
 "settings.hidden" = "Hidden Settings";
-"settings.ai" = "AI";
 "settings.backup" = "Backup";
 
 // MARK: - Settings - General
@@ -161,8 +160,6 @@
 "settings.defaultGroup" = "Default Group";
 "settings.defaultNoteGroup" = "Default Note Group";
 "settings.defaultNoteGroupDesc" = "Default group shown in note list";
-"settings.defaultKnowledgeGroup" = "Default Knowledge Group";
-"settings.defaultKnowledgeGroupDesc" = "Default group shown in knowledge base";
 
 // MARK: - Settings - Reminders
 "settings.enableReminder" = "Enable Smart Reminder";
@@ -224,32 +221,6 @@
 "settings.selectExcludedApps" = "Select Excluded Apps";
 "settings.noManageableApps" = "No manageable apps detected";
 
-// MARK: - Settings - AI
-"settings.aiMode" = "AI Mode";
-"settings.aiBackend" = "Backend";
-"settings.aiBackendDesc" = "Select AI service backend";
-"settings.aiProvider" = "AI Provider";
-"settings.preset" = "Preset";
-"settings.presetDesc" = "Quickly switch AI provider";
-"settings.apiEndpoint" = "API Endpoint";
-"settings.apiEndpointDesc" = "OpenAI-compatible API endpoint";
-"settings.model" = "Model";
-"settings.modelDesc" = "AI model name";
-"settings.apiKey" = "API Key";
-"settings.apiKeyDesc" = "Your API key";
-"settings.systemPrompt" = "System Prompt";
-"settings.systemPromptDesc" = "Define AI's role and behavior";
-"settings.apiModeInstructions" = "API mode uses OpenAI-compatible interface. Requires endpoint and API key configuration.";
-"settings.opencodeConfig" = "opencode Configuration";
-"settings.opencodeModelDesc" = "opencode available free models";
-"settings.refreshModels" = "Refresh Model List";
-"settings.acpService" = "ACP Service";
-"settings.status" = "Status";
-"settings.statusDesc" = "ACP background service connection status";
-"settings.autoStart" = "Auto-Start";
-"settings.autoStartDesc" = "Auto-start ACP service when app launches";
-"settings.opencodeModeInstructions" = "opencode mode uses the local opencode CLI to call AI without API key. Please install opencode first and configure the model provider.";
-
 // MARK: - Settings - Data Backup
 "settings.dataBackup" = "Data Backup";
 "settings.autoBackup" = "Auto Backup";
@@ -292,7 +263,6 @@
 "permission.later" = "Later";
 
 // MARK: - Note List
-"notes.copiedToKnowledge" = "✅ Copied to Knowledge Base";
 "notes.doubleClickToTry" = "Double-click to view all";
 "notes.viewInLargeWindow" = "View in Large Window";
 "notes.copyContent" = "Copy Content";
@@ -300,13 +270,10 @@
 "notes.moveToTop" = "Move to Top";
 "notes.deleteNote" = "Delete Note";
 "notes.editInLargeWindow" = "Edit/View in Large Window";
-"notes.fromKnowledgeBase" = "From Knowledge Base...";
 "notes.saved" = "Saved";
 "notes.manageGroups" = "Manage Groups";
 "notes.displayMode" = "Display Mode";
 "notes.defaultNoteGroup" = "Default Note Group";
-"notes.defaultKnowledgeGroup" = "Default Knowledge Group";
-"notes.knowledgeBase" = "Knowledge Base";
 "notes.trash" = "Trash";
 "notes.emptyTrash" = "Empty";
 "notes.confirmEmptyTrash" = "Confirm empty trash?";
@@ -348,10 +315,6 @@
 "reminder.resting" = "Resting";
 "reminder.restCompleted" = "Break Finished";
 "reminder.startWork" = "Start Working";
-
-// MARK: - Large Window
-"largeWindow.typeQuestion" = "Type a question to start";
-"largeWindow.placeholder" = "Type a question...";
 
 // MARK: - Plugin Settings
 "plugin.installedPlugins" = "Installed Plugins";
@@ -420,7 +383,6 @@
 "config.colorList" = "Color List";
 "config.executeHotkey" = "Execute Hotkey";
 "config.aiList" = "AI List";
-"config.knowledgeList" = "Knowledge List";
 "config.plugin" = "Plugin";
 
 // MARK: - Backup Frequency

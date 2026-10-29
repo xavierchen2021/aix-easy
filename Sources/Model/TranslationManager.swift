@@ -78,94 +78,9 @@ class TranslationManager: ObservableObject {
         // 立即显示翻译弹窗
         NotificationCenter.default.post(name: .showTranslationPopup, object: nil)
         
-        let config = FloatingButtonConfigManager.shared.config
-        
-        guard !config.aiApiKey.isEmpty, !config.aiUrl.isEmpty else {
-            self.currentTranslation?.translatedText = "请先在设置中配置 AI API Key 和接口地址"
-            self.isTranslating = false
-            return
-        }
-        
-        // 判断翻译方向
-        let chineseCount = trimmed.unicodeScalars.filter { $0.value >= 0x4E00 && $0.value <= 0x9FFF }.count
-        let isChinese = chineseCount > trimmed.count / 3
-        let targetLanguage = isChinese ? "English" : "中文"
-        
-        let systemPrompt = "你是一个专业的翻译助手。请将以下文本翻译为\(targetLanguage)。只输出翻译结果，不要添加任何解释或前缀。"
-        
-        let messages: [[String: String]] = [
-            ["role": "system", "content": systemPrompt],
-            ["role": "user", "content": trimmed]
-        ]
-        
-        var urlString = config.aiUrl
-        if !urlString.hasSuffix("/") { urlString += "/" }
-        urlString += "chat/completions"
-        
-        guard let url = URL(string: urlString) else {
-            self.currentTranslation?.translatedText = "无效的 AI 接口地址"
-            self.isTranslating = false
-            return
-        }
-        
-        let requestBody: [String: Any] = [
-            "model": config.aiModel,
-            "messages": messages.map { $0 as [String: Any] },
-            "stream": true
-        ]
-        
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            self.currentTranslation?.translatedText = "请求构建失败"
-            self.isTranslating = false
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(config.aiApiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = bodyData
-        
-        // 使用 delegate 实现真正的 SSE 流式输出
-        let delegate = TranslationStreamDelegate(
-            onChunk: { [weak self] chunk in
-                Task { @MainActor in
-                    guard let self = self else { return }
-                    self.currentTranslation?.translatedText += chunk
-                }
-            },
-            onComplete: { [weak self] in
-                Task { @MainActor in
-                    guard let self = self else { return }
-                    self.isTranslating = false
-                    // 保存到历史
-                    if let record = self.currentTranslation,
-                       !record.translatedText.isEmpty,
-                       !record.translatedText.hasPrefix("翻译失败") {
-                        self.translationHistory.insert(record, at: 0)
-                        if self.translationHistory.count > 200 {
-                            self.translationHistory = Array(self.translationHistory.prefix(200))
-                        }
-                        self.saveHistory()
-                    }
-                }
-            },
-            onError: { [weak self] errorMsg in
-                Task { @MainActor in
-                    guard let self = self else { return }
-                    self.isTranslating = false
-                    if self.currentTranslation?.translatedText.isEmpty == true {
-                        self.currentTranslation?.translatedText = "翻译失败: \(errorMsg)"
-                    }
-                }
-            }
-        )
-        
-        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-        let task = session.dataTask(with: request)
-        self.activeSession = session
-        self.activeTask = task
-        task.resume()
+        self.currentTranslation?.translatedText = "AI 接口已移除"
+        self.isTranslating = false
+        return
     }
     
     func cancelCurrentTranslation() {
